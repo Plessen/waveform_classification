@@ -1,0 +1,264 @@
+function [] = parallel_data_gen(signals_per_SNR, resize_method, seed, shuffle)
+rng(seed);
+%pool = parpool(5); % Start a parallel pool with 5 workers
+
+fs = 100e6;
+image_size = 128;
+A = 1;
+waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4'};
+%%signals_per_SNR = 10000;
+SNR = -14:2:-4;
+
+% Define resizing methods
+%resize_methods = {'nearest', 'bilinear', 'bicubic', 'lanczos2', 'lanczos3'};
+
+% Parallelize by resizing method
+%parfor method_idx = 1:length(resize_methods)
+%resize_method = resize_methods{method_idx};
+%fprintf('Worker %d is processing %s resizing...\n', method_idx, resize_method);
+
+% Preallocate storage for this resizing method
+input_train_SST = complex(zeros(signals_per_SNR * length(waveforms) * length(SNR), image_size, image_size));
+input_train_noisy_SST = complex(zeros(signals_per_SNR * length(waveforms) * length(SNR), image_size, image_size));
+input_train_VSST = complex(zeros(signals_per_SNR * length(waveforms) * length(SNR), image_size, image_size));
+input_train_noisy_VSST = complex(zeros(signals_per_SNR * length(waveforms) * length(SNR), image_size, image_size));
+output_train_data = zeros(signals_per_SNR * length(waveforms) * length(SNR), length(waveforms));
+
+data_index = 1;
+
+% Iterate over SNR and waveforms
+for snr_index = 1:length(SNR)
+    for waveform_index = 1:length(waveforms)
+        waveform = waveforms{waveform_index};
+        output_vector = zeros(1, length(waveforms));
+        output_vector(waveform_index) = 1;
+
+        switch waveform
+            case 'LFM'
+                % LFM-specific parameters
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/6,fs/4, signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR)); %random permutation
+                B = linspace(fs/20, fs/16, signals_per_SNR);
+                B = B(randperm(signals_per_SNR)); %random permutation
+                N = linspace(512,1024,signals_per_SNR);
+                N=round(N(randperm(signals_per_SNR))); %random permutation
+                sweepDirections = {'Up','Down'};
+
+                for idx = 1:signals_per_SNR
+                    wav = type_LFM(N(idx),fs,A,fc(idx),B(idx),sweepDirections{randi(2)});
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end
+
+            case 'Costas'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                Lc = [3, 4, 5, 6];
+                fcmin = linspace(fs/24,fs/20,signals_per_SNR);
+                fcmin=fcmin(randperm(signals_per_SNR));
+                N = linspace(512,1024,signals_per_SNR);
+                N=round(N(randperm(signals_per_SNR)));
+                for idx = 1:signals_per_SNR
+                    NumHop = randperm(Lc(randi(4)));
+                    wav = type_Costas(N(idx), fs, A, fcmin(idx), NumHop);
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end
+
+            case 'Barker'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                Lc = [7,11,13];
+                fc = linspace(fs/6,fs/4,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = 10:13;
+                for idx = 1:signals_per_SNR
+                    Bar = Lc(randi(3));
+                    if Bar == 7
+                        phaseCode = [0 0 0 1 1 0 1]*pi;
+                    elseif Bar == 11
+                        phaseCode = [0 0 0 1 1 1 0 1 1 0 1]*pi;
+                    elseif Bar == 13
+                        phaseCode = [0 0 0 0 0 1 1 0 0 1 0 1 0]*pi;
+                    end
+                    wav = type_Barker(Ncc, fs, A, fc(idx), phaseCode);
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end
+
+            case 'Frank'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/4,fs/3,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = [3,4,5];
+                M = [6, 7, 8];
+                for idx = 1:signals_per_SNR
+                    wav = type_Frank(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end
+            case 'P1'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/4,fs/3,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = [3,4,5];
+                M = [6, 7, 8];
+                for idx = 1:signals_per_SNR
+                    wav = type_P1(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end                    
+            case 'P2'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/4,fs/3,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = [3,4,5];
+                M = [6, 8];
+                for idx = 1:signals_per_SNR
+                    wav = type_P2(Ncc(randi(3)), fs, A, fc(idx), M(randi(2)));
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end            
+        
+            case 'P3'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/4,fs/3,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = [3,4,5];
+                p = [36, 49, 64];
+                for idx = 1:signals_per_SNR
+                    wav = type_P3(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end
+            case 'P4'
+                %disp(['Generating ',waveform, ' waveform on worker ', int2str(method_idx)]);
+                disp(['Generating ',waveform, ' waveform']);
+                fc = linspace(fs/4,fs/3,signals_per_SNR);
+                fc=fc(randperm(signals_per_SNR));
+                Ncc = [3,4,5];
+                p = [36, 49, 64];
+                for idx = 1:signals_per_SNR
+                    wav = type_P4(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
+                    [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
+                    resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method);
+                    input_train_SST(data_index, :, :) = resized_images.SST_resized;
+                    input_train_noisy_SST(data_index, :, :) = resized_images.SST_noisy_resized;
+                    input_train_VSST(data_index, :, :) = resized_images.VSST_resized;
+                    input_train_noisy_VSST(data_index, :, :) = resized_images.VSST_noisy_resized;
+                    output_train_data(data_index, :) = output_vector;
+                    data_index = data_index + 1;
+                end                    
+        end
+    end
+end
+
+size_input = size(input_train_SST);
+
+if shuffle
+    prefix = 'input_train_';
+    output_prefix = 'output_train_data_';
+else
+    prefix = 'input_test_';
+    output_prefix = 'output_test_data_';
+end
+
+h5create([prefix resize_method '_SST.h5'], '/images_real', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_noisy_SST.h5'], '/images_real', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_VSST.h5'], '/images_real', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_noisy_VSST.h5'], '/images_real', size_input, 'Datatype', 'double');
+
+h5create([prefix resize_method '_SST.h5'], '/images_imag', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_noisy_SST.h5'], '/images_imag', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_VSST.h5'], '/images_imag', size_input, 'Datatype', 'double');
+h5create([prefix resize_method '_noisy_VSST.h5'], '/images_imag', size_input, 'Datatype', 'double');
+
+h5create([output_prefix resize_method '.h5'],'/output_train_data', size(output_train_data));
+
+if shuffle
+    permutation_sequence = randperm(size(input_train_SST, 1));
+    input_train_SST = input_train_SST(permutation_sequence, :, :);
+    input_train_noisy_SST = input_train_noisy_SST(permutation_sequence, :, :);
+    input_train_VSST = input_train_VSST(permutation_sequence, :, :);
+    input_train_noisy_VSST = input_train_noisy_VSST(permutation_sequence, :, :);
+    output_train_data = output_train_data(permutation_sequence, :);
+
+    % Save data for this resizing method
+    parsave(['input_train_' resize_method '_SST.h5'], input_train_SST, true);
+    parsave(['input_train_' resize_method '_noisy_SST.h5'], input_train_noisy_SST, true);
+    parsave(['input_train_' resize_method '_VSST.h5'], input_train_VSST, true);
+    parsave(['input_train_' resize_method '_noisy_VSST.h5'], input_train_noisy_VSST, true);
+
+    h5write([output_prefix resize_method '.h5'], output_train_data, false);
+
+else
+     % Save data for this resizing method
+    parsave(['input_test_' resize_method '_SST.mat'], input_train_SST, true);
+    parsave(['input_test_' resize_method '_noisy_SST.mat'], input_train_noisy_SST, true);
+    parsave(['input_test_' resize_method '_VSST.mat'], input_train_VSST, true);
+    parsave(['input_test_' resize_method '_noisy_VSST.mat'], input_train_noisy_VSST, true);
+
+    parsave(['output_test_data_' resize_method '.mat'], output_train_data, false);
+end
+%end
+
+% Shut down the parallel pool
+%delete(pool);
+end
+
+function parsave(fname, x, input)
+if input
+    h5write(fname, "/images_real", real(x));
+    h5write(fname, "/images_real", imag(x));
+else
+    h5wwrite(fname, '/output_train_data', x);
+end
+end

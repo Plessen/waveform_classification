@@ -1,0 +1,29 @@
+function [] = transform_data(signal, noisy_signal, N, image_size, real_noise_std)
+    sigma = 0.15;
+
+    signal = signal(1:min(N, length(signal)));
+    noisy_signal = noisy_signal(1:min(N, length(noisy_signal)));
+    original_size = length(signal);
+
+    noisy_signal = [noisy_signal, zeros(size(noisy_signal, 1), N-length(noisy_signal))];
+    signal = [signal, zeros(size(signal, 1), N-length(signal))];
+
+    [~,SST,VSST,~,~,~,~] = sst2_new(noisy_signal, 1 / sigma^2 / N ,N, real_noise_std);
+    SST = SST(:, 1:original_size);
+    VSST = VSST(:, 1:original_size);
+
+    SST_resized_nearest = imresize(SST, [image_size, image_size], "nearest", "Antialiasing", false);
+    SST_resized_bilinear = imresize(SST, [image_size, image_size], "bilinear", "Antialiasing", false);
+    SST_resized_bicubic = imresize(SST, [image_size, image_size], "bicubic", "Antialiasing", false);
+    SST_resized_lanczos2 = imresize(SST, [image_size, image_size], "lanczos2", "Antialiasing", false);
+    SST_resized_lanczos3 = imresize(SST, [image_size, image_size], "lanczos3", "Antialiasing", false);
+
+    VSST_resized_nearest = imresize(VSST, [image_size, image_size], "nearest", "Antialiasing", false);
+    VSST_resized_bilinear = imresize(VSST, [image_size, image_size], "bilinear", "Antialiasing", false);
+    VSST_resized_bicubic = imresize(VSST, [image_size, image_size], "bicubic", "Antialiasing", false);
+    VSST_resized_lanczos2 = imresize(VSST, [image_size, image_size], "lanczos2", "Antialiasing", false);
+    VSST_resized_lanczos3 = imresize(VSST, [image_size, image_size], "lanczos3", "Antialiasing", false);
+
+end
+
+
