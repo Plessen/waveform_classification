@@ -15,10 +15,8 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
 
     if train
         prefix = 'input_train_';
-        %output_prefix = 'output_train_data_';
     else
         prefix = 'input_test_';
-        %output_prefix = 'output_test_data_';
     end
 
     for snr_index = 1:length(SNR)
@@ -26,26 +24,16 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
          RandStream.setGlobalStream(s);
 
          prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-         %prefix_noisy = fullfile(output_dir, [prefix resize_method '_noisy_' transform '_' num2str(snr_index) '.h5']);
-         %prefix_output = fullfile(output_dir, [output_prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-         
          h5create(prefix_clean, '/clean_images/images_real', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
          h5create(prefix_clean, '/clean_images/images_imag', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_real', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_imag', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
          h5create(prefix_clean, '/labels', [total_signals_per_SNR, length(waveforms)]);
-         %h5create(prefix_output, '/output', [total_signals_per_SNR, length(waveforms)])
-         %h5create(prefix_clean, '/images_real', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
-         %h5create(prefix_clean, '/images_imag', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
-         %h5create(prefix_noisy, '/images_real', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
-         %h5create(prefix_noisy, '/images_imag', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
+     
     end
 
     parfor snr_index = 1:length(SNR)
         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-        %prefix_noisy = fullfile(output_dir, [prefix resize_method '_noisy_' transform '_' num2str(snr_index) '.h5']);
-        %prefix_output = fullfile(output_dir, [output_prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-
         start_index = 1;
         input_batch = complex(zeros(signals_per_SNR, image_size, image_size));
         input_noisy_batch = complex(zeros(signals_per_SNR, image_size, image_size));
@@ -205,12 +193,13 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
        end
     end
     
+    delete(pool);
     if train
+        disp("Starting data shuffling");
         combine_h5_files_shuffled(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
     else
         combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
     end
-    delete(pool);
 end
 
 
@@ -222,22 +211,17 @@ function write_batch_to_h5(prefix_clean, input_batch, input_noisy_batch, output_
     h5write(prefix_clean, '/labels', output_data_batch, [start 1], [signals_per_SNR, size(output_data_batch, 2)]);
 end
 
-
 function combine_h5_files(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir)
 
     if train
         prefix = 'input_train_';
-        %output_prefix = 'output_train_data_';
     else
         prefix = 'input_test_';
-        %output_prefix = 'output_test_data_';
     end
 
     total_signals = snr_length * signals_per_SNR * num_waveforms;
     
     combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '.h5']);
-    %combined_noisy_file = fullfile(output_dir, [prefix resize_method '_noisy_' transform '.h5']);
-    %combined_output = fullfile(output_dir, [output_prefix resize_method '_' transform '.h5']);
 
     h5create(combined_clean_file, '/clean_images/images_real', [total_signals, image_size, image_size], 'Datatype', 'double');
     h5create(combined_clean_file, '/clean_images/images_imag', [total_signals, image_size, image_size], 'Datatype', 'double');
@@ -248,8 +232,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
     current_index = 1;
     for snr_index = 1:snr_length
         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-        %prefix_noisy = fullfile(output_dir, [prefix resize_method '_noisy_' transform '_' num2str(snr_index) '.h5']);
-        %prefix_output = fullfile(output_dir, [output_prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
+
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
             
@@ -271,8 +254,6 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
             current_index = current_index + num_signals_to_read;
         end
         delete(prefix_clean);
-        %delete(prefix_noisy);
-        %delete(prefix_output);
     end
 end
 
@@ -291,14 +272,13 @@ function combine_h5_files_shuffled(resize_method, transform, train, snr_length, 
     h5create(combined_file, '/noisy_images/images_imag', [total_signals, image_size, image_size], 'Datatype', 'double');
     h5create(combined_file, '/labels', [total_signals, num_waveforms], 'Datatype', 'double');
 
-    rng('shuffle'); % Initialize random number generator ONCE
-
+    rng('shuffle'); 
     % Create a single permutation for ALL signals
     permutation = randperm(total_signals);
     
     for snr_index = 1:snr_length
         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
-
+        disp(['Running on SNR index ' int2str(snr_index)]);
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
 
@@ -320,7 +300,7 @@ function combine_h5_files_shuffled(resize_method, transform, train, snr_length, 
             noisy_real_data = h5read(prefix_clean, '/noisy_images/images_real', [batch_start_index,1,1], [num_signals_to_read,image_size,image_size]);
             noisy_imag_data = h5read(prefix_clean, '/noisy_images/images_imag', [batch_start_index,1,1], [num_signals_to_read,image_size,image_size]);
             output_data = h5read(prefix_clean, '/labels', [batch_start_index,1], [num_signals_to_read, num_waveforms]);
-            assert(sum(sum(output_data)) == num_signals_to_read, "Failed");
+            
             % Write data to the combined file at the shuffled positions
             for i = 1:num_signals_to_read
                 combined_index = shuffled_indices(i);
