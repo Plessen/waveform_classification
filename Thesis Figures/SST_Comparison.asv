@@ -1,0 +1,79 @@
+fs = 100e6;
+A = 1;
+p4_signal = type_P4(5, fs, A, fs  / 4, 64);
+N = 1024;
+p4_signal = p4_signal(1:1024);
+sigma = 0.15;
+[STFT,SST,VSST,~,~,~,~] = sst2_new(p4_signal,1 / sigma^2 / N ,N,1e-2);
+
+displayZoomedImage(abs(STFT), [500, 250], 200, fs);
+displayZoomedImage(abs(SST), [500, 250], 200, fs);
+displayZoomedImage(abs(VSST), [500, 250], 200, fs);
+
+function displayZoomedImage(image, zoomCenter, zoomSize, fs)
+    % Function to display a 1024x1024 image with a zoomed-in rectangle using imagesc.
+    %
+    % Parameters:
+    % - image: The input 1024x1024 matrix (image).
+    % - zoomCenter: A 2-element vector specifying the [x, y] center of the zoom region.
+    %               If empty, defaults to the center of the image.
+    % - zoomSize: A scalar specifying the side length of the zoomed region. Defaults to 100.
+    %
+    % Example usage:
+    % displayZoomedImageWithImagesc(myImage, [512, 512], 150);
+
+    % Input validation
+    if nargin < 2 || isempty(zoomCenter)
+        zoomCenter = [512, 512]; % Default to the center of the image
+    end
+    if nargin < 3 || isempty(zoomSize)
+        zoomSize = 100; % Default size of the zoomed region
+    end
+
+    % Ensure the image is 1024x1024
+    if size(image, 1) ~= 1024 || size(image, 2) ~= 1024
+        error('The input image must be 1024x1024 in size.');
+    end
+
+    time = (0:(1024-1)) / fs;  % Time axis
+    freq = (0:1023) * (fs / 1024);  % Frequency axis (one-sided)
+    % Calculate zoom region boundaries
+    xStart = max(1, zoomCenter(1) - zoomSize / 2);
+    xEnd = min(size(image, 2), zoomCenter(1) + zoomSize / 2);
+    yStart = max(1, zoomCenter(2) - zoomSize / 2);
+    yEnd = min(size(image, 1), zoomCenter(2) + zoomSize / 2);
+
+    % Crop the zoomed region
+    zoomedRegion = image(round(yStart):round(yEnd), round(xStart):round(xEnd));
+    
+    % Display the original image with a rectangle
+    figure;
+    subplot(2, 1, 1);
+    imagesc(image);
+    colormap('jet'); % Choose a colormap for better visualization
+    colorbar;
+    axis xy;
+    title('Original Image');
+    hold on;
+
+    % Draw rectangle on the original image
+    rectangle('Position', [xStart, yStart, zoomSize, zoomSize], ...
+              'EdgeColor', 'w', 'LineWidth', 2);
+    
+    customTimeTicks = time; % Custom time points in seconds
+    xticks(customTimeTicks); % Specify the positions of the ticks
+    xticklabels(string(customTimeTicks)); % Set the labels for these ticks
+
+    customFreqTicks = [0, 100, 200, 300, 400, 500]; % Custom frequency points in Hz
+    yticks(customFreqTicks); % Specify the positions of the ticks
+    yticklabels(string(customFreqTicks)); % Set the labels for these ticks
+    % Display the zoomed region
+    subplot(2, 1, 2);
+    imagesc(zoomedRegion);
+    pbaspect([1 1 1]);
+    colormap('jet'); % Use the same colormap for consistency
+    colorbar;
+    axis xy;
+    title('Zoomed Region');
+end
+
