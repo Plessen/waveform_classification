@@ -246,8 +246,8 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
             %Read and write noisy data
             real_data_noisy = h5read(prefix_clean, '/noisy_images/images_real', [batch_start_index,1,1], [num_signals_to_read,image_size,image_size]);
             imag_data_noisy = h5read(prefix_clean, '/noisy_images/images_imag', [batch_start_index,1,1], [num_signals_to_read,image_size,image_size]);
-            h5write(combined_clean_file, '/clean_images/images_real', real_data_noisy, [current_index,1,1], [num_signals_to_read,image_size,image_size]);
-            h5write(combined_clean_file, '/clean_images/images_imag', imag_data_noisy, [current_index,1,1], [num_signals_to_read,image_size,image_size]);
+            h5write(combined_clean_file, '/noisy_images/images_real', real_data_noisy, [current_index,1,1], [num_signals_to_read,image_size,image_size]);
+            h5write(combined_clean_file, '/noisy_images/images_imag', imag_data_noisy, [current_index,1,1], [num_signals_to_read,image_size,image_size]);
             
             output_data = h5read(prefix_clean, '/labels', [batch_start_index,1], [num_signals_to_read, num_waveforms]);
             h5write(combined_clean_file, '/labels', output_data, [current_index, 1], [num_signals_to_read, num_waveforms]);
