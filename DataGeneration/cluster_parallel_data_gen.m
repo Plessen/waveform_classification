@@ -20,9 +20,6 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     end
 
     for snr_index = 1:length(SNR)
-         s = RandStream.create('mt19937ar','Seed', seed + snr_index);
-         RandStream.setGlobalStream(s);
-
          prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
          h5create(prefix_clean, '/clean_images/images_real', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
          h5create(prefix_clean, '/clean_images/images_imag', [total_signals_per_SNR, image_size, image_size], 'Datatype', 'double');
@@ -33,6 +30,9 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     end
 
     parfor snr_index = 1:length(SNR)
+        s = RandStream.create('mt19937ar','Seed', seed + snr_index);
+        RandStream.setGlobalStream(s);
+
         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
         start_index = 1;
         input_batch = complex(zeros(signals_per_SNR, image_size, image_size));
