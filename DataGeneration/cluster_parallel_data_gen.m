@@ -1,4 +1,7 @@
-function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, num_workers, seed, train)
+function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, seed, train)
+    
+    initParPool();
+    
     output_dir = "./data";
     assert(exist(output_dir, "dir"), "The output directory does not exist");
 
@@ -10,7 +13,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4'};
     SNR = -16:2:-4;
-    pool = parpool(num_workers);
+    %pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
 
     if train
@@ -205,6 +208,8 @@ end
 
 
 function write_batch_to_h5(prefix_clean, input_batch, input_noisy_batch, output_data_batch, start, image_size, signals_per_SNR)
+    input_batch = permute(input_batch, [2, 1, 3]);
+    input_noisy_batch = permute(input_noisy_batch, [2, 1, 3]);
     h5write(prefix_clean, '/clean_images/images_real', real(input_batch), [1 1 start], [image_size, image_size, signals_per_SNR]);
     h5write(prefix_clean, '/clean_images/images_imag', imag(input_batch), [1 1 start], [image_size, image_size, signals_per_SNR]);
     h5write(prefix_clean, '/noisy_images/images_real', real(input_noisy_batch), [1 1 start], [image_size, image_size, signals_per_SNR]);
