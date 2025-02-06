@@ -34,7 +34,7 @@ function [STFT,SST,VSST,omega,tau,omega2,g] = sst2_new(s,aa,Nfft,gamma)
  a   = aa*Nfft*pi; 
  gp  = -2*a*t0.*g; 
  gpp = (-2*a+4*a^2*t0.^2).*g; % g''
-  
+    
  % Initialization
  STFT  = zeros(neta,nb);
  SST   = zeros(neta,nb);

@@ -1,6 +1,6 @@
-function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, seed, train)
+function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, num_workers, seed, train)
     
-    initParPool();
+    %pool = initParPool();
     
     output_dir = "./data";
     assert(exist(output_dir, "dir"), "The output directory does not exist");
@@ -12,8 +12,8 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     image_size = 128;
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4'};
-    SNR = -16:2:-4;
-    %pool = parpool(num_workers);
+    SNR = -14:2:-4;
+    pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
 
     if train

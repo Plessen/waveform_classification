@@ -1,4 +1,4 @@
-function initParPool()
+function pool = initParPool()
 % initializes a parallel pool on a slurm cluster using the correct number
 % of workers based on the SLURM_CPU_PER_TASK environment variable.
 
@@ -20,5 +20,5 @@ if  ~parpoolOn
     c.JobStorageLocation=t;
     
     % start the parallel pool
-    parpool(c,num_workers);
+    pool = parpool(c,num_workers);
 end
