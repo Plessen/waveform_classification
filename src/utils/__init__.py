@@ -1,3 +1,3 @@
-from .parseargs import parseargs
+from .parseargs import parse_args
 
-__all__ = ["parseargs"]
+__all__ = ["parse_args"]

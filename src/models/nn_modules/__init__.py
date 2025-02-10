@@ -1,4 +1,4 @@
 from .realcnn import RealConvNet
-from .complexcnn import ComplexConvNet
+from .complexcnn import ComplexConvNet, ComplexConvNetAttention
 
-__all__ = ["RealConvNet", "ComplexConvNet"]
+__all__ = ["RealConvNet", "ComplexConvNet", "ComplexConvNetAttention"]

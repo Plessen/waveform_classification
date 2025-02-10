@@ -1,6 +1,6 @@
-from nn_modules.realcnn import RealConvNet
-from nn_modules.complexcnn import ComplexConvNetV3
-from lit_modules import BaseLitModel
+from .nn_modules.realcnn import RealConvNet
+from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention
+from .lit_modules import BaseLitModel
 from ..data.datamodules import SignalDataModule
 from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
 
@@ -10,7 +10,10 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split):
         model = BaseLitModel(RealConvNet())
     elif model_name == "complexcnn":
         dataset_class = SignalDatasetComplex
-        model = BaseLitModel(ComplexConvNetV3())
+        model = BaseLitModel(ComplexConvNet())
+    elif model_name == "complexcnn-attention":
+        dataset_class = SignalDatasetComplex
+        model = BaseLitModel(ComplexConvNetAttention())
     else:
         raise ValueError("Model name not recognized.")
     
