@@ -1,6 +1,6 @@
 from complexNN.nn import cConv2d, cLinear, cElu, cMaxPool2d, cAvgPool2d, cDropout, cBatchNorm2d
 import torch.nn as nn
-from .complex_layers import CVEfficientChannelAtttention, cDenoisingAutoencoder
+from .complex_layers import CVEfficientChannelAtttention, ComplexDenoisingAutoencoder
 
 class ComplexConvNet(nn.Module):
     
@@ -71,7 +71,7 @@ class ComplexConvNetDenoise(nn.Module):
     def __init__(self, image_size, number_patches, model):
         super(ComplexConvNetDenoise, self).__init__()
         self.number_patches = number_patches
-        self.denoiser = cDenoisingAutoencoder(image_size, number_patches)
+        self.denoiser = ComplexDenoisingAutoencoder(image_size, number_patches)
         self.model = model
         
     def forward(self, x):

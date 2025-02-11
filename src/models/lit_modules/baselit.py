@@ -2,12 +2,7 @@ import lightning as L
 import torch.nn as nn
 import lightning as L
 import torch.optim as optim
-
-
-def freeze_model(model):
-    for param in model.parameters():
-        param.requires_grad = False
-    return model
+from .lossfunctions import ComplexMSELoss
 
 class BaseLitModel(L.LightningModule):
     def __init__(self, model, lr = 0.001):
@@ -50,14 +45,11 @@ class BaseLitModel(L.LightningModule):
         return self.optimizer
      
 class BaseLitModelAutoencoder(L.LightningModule):
-    def __init__(self, model, lr = 0.001, freeze = False):
+    def __init__(self, model, lr = 0.001):
         super().__init__()
-        self.model = model
-        if freeze:
-            self.model = freeze_model(self.model)
-            
+        self.model = model            
         self.criterion_classifier = nn.NLLLoss()
-        self.criterion_autoencoder = nn.BCELoss()
+        self.criterion_autoencoder = ComplexMSELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         
     def forward(self, x):
@@ -77,7 +69,7 @@ class BaseLitModelAutoencoder(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
         output, noisy_image, noisy_patches = self.model(noisy_image)
-        loss = self.criterion(output, label)
+        loss = self.criterion_classifier(output, label)
         loss_patch_reconstruction = self.criterion_autoencoder(noisy_patches, self.model.denoiser.extract_patches(noisy_image))
         loss_image_denoising = self.criterion_autoencoder(noisy_image, clean_image)
         
@@ -92,7 +84,7 @@ class BaseLitModelAutoencoder(L.LightningModule):
     def test_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
         output, _,  _ = self.model(noisy_image)
-        loss = self.criterion(output, label)
+        loss = self.criterion_classifier(output, label)
         acc = (output.argmax(dim = 1) == label).float().mean()
         self.log("test_acc", acc, on_step=True, prog_bar=True)
         self.log("test_loss", loss, on_step=True, prog_bar=True)

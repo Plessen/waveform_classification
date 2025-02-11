@@ -24,6 +24,11 @@ def parse_args():
     parser.add_argument("--architecture", type=str, required=True, help="Architecture of the model (realcnn, complexcnn).")
     parser.add_argument("--model_name", type=str, required=True, help="Name of the model for logging.")
     parser.add_argument("--version", type=int, default=0, help="Version of the model for logging.")
-
+    
+    # Other
+    parser.add_argument("--checkpoint_path", type=str, default=None, help="Path to the checkpoint file.")
+    parser.add_argument("--pretrained_model_name", type=str, default=None, help="Name of the pretrained model to use.")
+    parser.add_argument("--freeze", action="store_true", default=False, help="Freeze the pretrained model.")
+    
     return parser.parse_args()
 

@@ -8,7 +8,10 @@ from src.models.factory import model_factory
 def main(args):
     data_paths = {'train': args.train_data_path, 'test': args.test_data_path}
     batch_sizes = {'train': args.train_batch_size, 'val': args.val_batch_size, 'test': args.test_batch_size}
-    model, data_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, args.learning_rate)
+    model, data_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
+                                       args.learning_rate, image_size=128,
+                                       number_patches=4, checkpoint_path=args.checkpoint_path, 
+                                       pretrained_model_name=args.pretrained_model_name, freeze=args.freeze)
 
     logger = CSVLogger("logs", name=args.model_name, version=args.version)
     checkpoint_callback = ModelCheckpoint(monitor='val_loss', dirpath="logs/{}/version_{}/checkpoints".format(args.model_name, args.version), filename=args.model_name + '-{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}', save_top_k=1, mode='min')

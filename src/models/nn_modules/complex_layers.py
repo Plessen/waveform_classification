@@ -142,10 +142,10 @@ class ComplexDenoisingAutoencoder(nn.Module):
         return combined, denoised_patches
         
 def test_extract_combine():
-    image_size = 32
+    image_size = 128
     num_patches = 4
     B, C = 256, 1  # Batch size 1, 3 channels
-    x = torch.randn(B, C, image_size, image_size, dtype=torch.cfloat)
+    x = torch.randn(B, C, image_size, image_size, dtype=torch.complex64)
 
     model = ComplexDenoisingAutoencoder(image_size, num_patches)
 
@@ -158,4 +158,4 @@ def test_cpatchautoencoder_summary():
     summary(model, input_size=(256, 1, 128, 128), dtypes=[torch.complex64])
 
 if __name__ == "__main__":
-    test_cpatchautoencoder_summary()
+    test_extract_combine()
