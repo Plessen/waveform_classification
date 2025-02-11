@@ -59,10 +59,11 @@ class BaseLitModelAutoencoder(L.LightningModule):
         clean_image, noisy_image, label = batch
         output, noisy_image, noisy_patches = self(noisy_image)
         loss_classification = self.criterion_classifier(output, label)
-        loss_patch_reconstruction = self.criterion_autoencoder(noisy_patches, self.model.denoiser.extract_patches(noisy_image))
+        loss_patch_reconstruction = self.criterion_autoencoder(noisy_patches, self.model.denoiser.extract_patches(clean_image))
         loss_image_denoising = self.criterion_autoencoder(noisy_image, clean_image)
-        
-        loss = loss_classification + loss_image_denoising + 0.1 * loss_patch_reconstruction
+        #print(output)
+        #print(loss_classification, loss_patch_reconstruction, loss_image_denoising)
+        loss = loss_classification + 0.01 * loss_image_denoising + 0.001 * loss_patch_reconstruction
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)
         return loss
     

@@ -65,7 +65,7 @@ class cUpsample2d(nn.Module):
 class ComplexModReLU(nn.Module):
     def __init__(self, num_channels):
         super(ComplexModReLU, self).__init__()
-        self.bias = nn.Parameter(torch.rand(num_channels) * 0.02)
+        self.bias = nn.Parameter(torch.randn(num_channels) * 0.02)
     
     def forward(self, x):
         magnitude = torch.abs(x) 
@@ -82,19 +82,19 @@ class cPatchAutoencoder(nn.Module):
     
         self.encoder = nn.Sequential(
             ComplexConv2d(1, 64, kernel_size=3, padding="same", bias=True),
-            ComplexModReLU(64),
+            ComplexReLU(),
             ComplexMaxPool2d(2, 2),
             ComplexConv2d(64, 64, kernel_size=3, padding="same", bias=True),
-            ComplexModReLU(64),
+            ComplexReLU(),
             ComplexMaxPool2d(2, 2)
         )
         
         self.decoder = nn.Sequential(
             ComplexConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True),
-            ComplexModReLU(64),
+            ComplexReLU(),
             cUpsample2d(scale_factor=2, mode='nearest'),
             ComplexConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True),
-            ComplexModReLU(64),
+            ComplexReLU(),
             cUpsample2d(scale_factor=2, mode='nearest'),
             ComplexConvTranspose2d(64, 1, kernel_size=3, padding=1, bias=True),
             PhaseSigmoid()
