@@ -1,6 +1,6 @@
 from complexNN.nn import cConv2d, cLinear, cElu, cMaxPool2d, cAvgPool2d, cDropout, cBatchNorm2d
 import torch.nn as nn
-from .complex_layers import CVEfficientChannelAtttention
+from .complex_layers import CVEfficientChannelAtttention, cDenoisingAutoencoder
 
 class ComplexConvNet(nn.Module):
     
@@ -66,3 +66,15 @@ class ComplexConvNetAttention(nn.Module):
         x = x.abs()
         x = nn.functional.log_softmax(x, dim=1)
         return x
+
+class ComplexConvNetDenoise(nn.Module):
+    def __init__(self, image_size, number_patches, model):
+        super(ComplexConvNetDenoise, self).__init__()
+        self.number_patches = number_patches
+        self.denoiser = cDenoisingAutoencoder(image_size, number_patches)
+        self.model = model
+        
+    def forward(self, x):
+        combined_image, patches = self.denoiser(x)
+        x = self.model(combined_image)
+        return x, combined_image, patches
