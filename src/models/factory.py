@@ -5,7 +5,6 @@ from ..data.datamodules import SignalDataModule
 from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
 
 def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, lr, image_size = 128, number_patches = 4, checkpoint_path = None, pretrained_model_name = None):
-    # Map model names to components
     model_config = {
         "realcnn": {
             "dataset_class": SignalDatasetReal,
