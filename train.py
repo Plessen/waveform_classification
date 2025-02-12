@@ -8,7 +8,7 @@ from src.models.factory import model_factory
 def main(args):
     data_paths = {'train': args.train_data_path, 'test': args.test_data_path}
     batch_sizes = {'train': args.train_batch_size, 'val': args.val_batch_size, 'test': args.test_batch_size}
-    model, data_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
+    model, data_module, lit_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
                                        args.learning_rate, image_size=128,
                                        number_patches=4, checkpoint_path=args.checkpoint_path, 
                                        pretrained_model_name=args.pretrained_model_name, freeze=args.freeze)
@@ -20,7 +20,7 @@ def main(args):
     trainer.fit(model, data_module)
     
     best_checkpoint_path = checkpoint_callback.best_model_path
-    test_model = model.load_from_checkpoint(best_checkpoint_path, model=model)
+    test_model = lit_module.load_from_checkpoint(best_checkpoint_path, model=model)
     trainer.test(test_model, datamodule=data_module)
     
     

@@ -71,5 +71,6 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
 
     # Create datamodule
     data_module = SignalDataModule(cfg["dataset_class"], data_paths, batch_sizes, num_workers, val_split)
+    lit_model_class = cfg["lit_model_class"]
     
-    return model, data_module
+    return model, data_module, lit_model_class
