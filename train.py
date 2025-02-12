@@ -20,7 +20,7 @@ def main(args):
     trainer.fit(model, data_module)
     
     best_checkpoint_path = checkpoint_callback.best_model_path
-    test_model = lit_module.load_from_checkpoint(best_checkpoint_path, model=model)
+    test_model = lit_module.load_from_checkpoint(best_checkpoint_path, model = model.model)
     trainer.test(test_model, datamodule=data_module)
     
     
