@@ -9,11 +9,14 @@ class ComplexMSELoss(nn.Module):
 
     def forward(self, input, target):
         # Split into real and imaginary components
-        input_real = input.real
-        input_imag = input.imag
-        target_real = target.real
-        target_imag = target.imag
-        
-        loss_real = F.mse_loss(input_real, target_real, reduction=self.reduction)
-        loss_imag = F.mse_loss(input_imag, target_imag, reduction=self.reduction)
-        return loss_real + loss_imag
+        if torch.is_complex(input):
+            input_real = input.real
+            input_imag = input.imag
+            target_real = target.real
+            target_imag = target.imag
+            
+            loss_real = F.mse_loss(input_real, target_real, reduction=self.reduction)
+            loss_imag = F.mse_loss(input_imag, target_imag, reduction=self.reduction)
+            return loss_real + loss_imag
+
+        return F.mse_loss(input, target, reduction=self.reduction)

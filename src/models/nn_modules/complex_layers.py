@@ -1,7 +1,7 @@
 import torch.nn as nn
 from torch.nn.functional import sigmoid, interpolate, relu
 import torch
-from complexNN.nn import cConv1d, cAvgPool2d, cConv2d, cMaxPool2d, cRelu
+from complexNN.nn import cConv1d, cAvgPool2d, cConv2d, cMaxPool2d, cRelu, cSigmoid, cTanh
 import numpy as np
 from complexPyTorch.complexLayers import ComplexConv2d, ComplexConvTranspose2d, ComplexReLU, ComplexMaxPool2d
 from torchinfo import summary
@@ -81,23 +81,54 @@ class cPatchAutoencoder(nn.Module):
         super(cPatchAutoencoder, self).__init__()
     
         self.encoder = nn.Sequential(
-            ComplexConv2d(1, 64, kernel_size=3, padding="same", bias=True),
-            ComplexReLU(),
+            nn.Conv2d(1, 64, kernel_size=3, padding="same", bias=True, dtype=torch.complex64),
+            cRelu(),
             ComplexMaxPool2d(2, 2),
-            ComplexConv2d(64, 64, kernel_size=3, padding="same", bias=True),
-            ComplexReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, padding="same", bias=True, dtype=torch.complex64),
+            cRelu(),
             ComplexMaxPool2d(2, 2)
         )
         
         self.decoder = nn.Sequential(
-            ComplexConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True),
-            ComplexReLU(),
+            nn.ConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True, dtype=torch.complex64),
+            cRelu(),
             cUpsample2d(scale_factor=2, mode='nearest'),
-            ComplexConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True),
-            ComplexReLU(),
+            nn.ConvTranspose2d(64, 64, kernel_size=3, padding=1, bias=True, dtype=torch.complex64),
+            cRelu(),
             cUpsample2d(scale_factor=2, mode='nearest'),
-            ComplexConvTranspose2d(64, 1, kernel_size=3, padding=1, bias=True),
-            PhaseSigmoid()
+            nn.ConvTranspose2d(64, 1, kernel_size=3, padding=1, bias=True, dtype=torch.complex64),
+            cTanh()
+        )
+    
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+        
+class cPatchAutoencoderGrouped(nn.Module):
+        
+    def __init__(self, num_patches):
+        super(cPatchAutoencoderGrouped, self).__init__()
+        self.num_patches = num_patches
+        
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches, dtype=torch.complex64),
+            cRelu(),
+            ComplexMaxPool2d(2, 2),
+            nn.Conv2d(64 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches, dtype=torch.complex64),
+            cRelu(),
+            ComplexMaxPool2d(2, 2)
+        )
+        
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64 * num_patches, 64 * num_patches, kernel_size=3, padding=1, bias=True, groups=num_patches, dtype=torch.complex64),
+            cRelu(),
+            cUpsample2d(scale_factor=2, mode='nearest'),
+            nn.ConvTranspose2d(64 * num_patches, 64 * num_patches, kernel_size=3, padding=1, bias=True, groups=num_patches, dtype=torch.complex64),
+            cRelu(),
+            cUpsample2d(scale_factor=2, mode='nearest'),
+            nn.ConvTranspose2d(64 * num_patches, 1 * num_patches, kernel_size=3, padding=1, bias=True, groups=num_patches, dtype=torch.complex64),
+            cTanh()
         )
     
     def forward(self, x):
@@ -105,57 +136,3 @@ class cPatchAutoencoder(nn.Module):
         x = self.decoder(x)
         return x
 
-class ComplexDenoisingAutoencoder(nn.Module):
-    def __init__(self, image_size, num_patches):
-        super(ComplexDenoisingAutoencoder, self).__init__()
-        self.image_size = image_size
-        self.num_patches = num_patches
-        self.patches_per_dim = int(num_patches**0.5)
-        self.patch_size = image_size // self.patches_per_dim
-        
-        self.autoencoders = nn.ModuleList([cPatchAutoencoder() for _ in range(self.num_patches)])
-
-    def extract_patches(self, x):
-        B, C, H, W = x.shape
-        patches = x.unfold(2, self.patch_size, self.patch_size).unfold(3, self.patch_size, self.patch_size)
-        patches = patches.contiguous().view(B, C, -1, self.patch_size, self.patch_size)
-        patches = patches.permute(2, 0, 1, 3, 4).contiguous().view(-1, C, self.patch_size, self.patch_size)
-        return patches
-
-    def combine_patches(self, patches):
-        B = patches.shape[0] // self.num_patches
-        patches = patches.view(self.patches_per_dim, self.patches_per_dim, B, -1, self.patch_size, self.patch_size)
-        patches = patches.permute(2, 3, 0, 4, 1, 5).contiguous()
-        combined = patches.view(B, -1, self.patches_per_dim * self.patch_size, self.patches_per_dim * self.patch_size)
-        return combined
-
-    def forward(self, x):
-        patches = self.extract_patches(x)
-        denoised_patches = []
-        for i, autoencoder in enumerate(self.autoencoders):
-            patch_group = patches[i::self.num_patches, ...]
-            denoised_patch_group = autoencoder(patch_group)
-            denoised_patches.append(denoised_patch_group)
-        
-        denoised_patches = torch.cat(denoised_patches, dim=0)
-        combined = self.combine_patches(denoised_patches)
-        return combined, denoised_patches
-        
-def test_extract_combine():
-    image_size = 128
-    num_patches = 4
-    B, C = 256, 1  # Batch size 1, 3 channels
-    x = torch.randn(B, C, image_size, image_size, dtype=torch.complex64)
-
-    model = ComplexDenoisingAutoencoder(image_size, num_patches)
-
-    output, patches = model(x)
-    print(output.shape)
-    print(patches.shape)
-    
-def test_cpatchautoencoder_summary():
-    model = ComplexDenoisingAutoencoder(128, 4)
-    summary(model, input_size=(256, 1, 128, 128), dtypes=[torch.complex64])
-
-if __name__ == "__main__":
-    test_extract_combine()

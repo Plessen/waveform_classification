@@ -1,6 +1,6 @@
-from .nn_modules.realcnn import RealConvNet
-from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise
-from .lit_modules import BaseLitModel, BaseLitModelAutoencoder
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder
+from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
+from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder
 from ..data.datamodules import SignalDataModule
 from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
 
@@ -17,6 +17,24 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "model_class": RealConvNet,
             "model_args": {}
         },
+        "realcnn-attention": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModel,
+            "model_class": RealConvNetAttention,
+            "model_args": {}
+        },
+        "realcnn-autoencoder": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModelUsingAutoencoder,
+            "model_class": RealConvNetDenoise,
+            "model_args": {"image_size": image_size, "number_patches": number_patches}
+        },
+        "real-autoencoder": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModelAutoencoder,
+            "model_class": RealDenoisingAutoencoder,
+            "model_args": {"image_size": image_size, "number_patches": number_patches}
+        },
         "complexcnn": {
             "dataset_class": SignalDatasetComplex,
             "lit_model_class": BaseLitModel,
@@ -31,8 +49,14 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
         },
         "complexcnn-autoencoder": {
             "dataset_class": SignalDatasetComplex,
-            "lit_model_class": BaseLitModelAutoencoder,
+            "lit_model_class": BaseLitModelUsingAutoencoder,
             "model_class": ComplexConvNetDenoise,
+            "model_args": {}
+        },
+        "complex-autoencoder": {
+            "dataset_class": SignalDatasetComplex,
+            "lit_model_class": BaseLitModelAutoencoder,
+            "model_class": ComplexDenoisingAutoencoder,
             "model_args": {"image_size": image_size, "number_patches": number_patches}
         }
     }
@@ -52,11 +76,19 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             
     # Handle autoencoder special case
     if model_name == "complexcnn-autoencoder":
+        model_config[model_name]["model_args"]["model"] = ComplexConvNetAttention()
         if not pretrained_model:
-            model_config["complexcnn-autoencoder"]["model_args"]["model"] = ComplexConvNet()
+            model_config[model_name]["model_args"]["autoencoder"] = ComplexDenoisingAutoencoder(image_size, number_patches)
         else: 
-            model_config["complexcnn-autoencoder"]["model_args"]["model"] = pretrained_model
+            model_config[model_name]["model_args"]["autoencoder"] = pretrained_model
 
+    if model_name == "realcnn-autoencoder":
+        model_config[model_name]["model_args"]["model"] = RealConvNetAttention()
+        if not pretrained_model:
+            model_config[model_name]["model_args"]["autoencoder"] = RealDenoisingAutoencoder(image_size, number_patches)
+        else: 
+            model_config[model_name]["model_args"]["autoencoder"] = pretrained_model
+            
     # Validate model name
     if model_name not in model_config:
         raise ValueError(f"Unsupported model: {model_name}")

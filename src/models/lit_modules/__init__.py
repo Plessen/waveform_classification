@@ -1,3 +1,3 @@
-from .baselit import BaseLitModel, BaseLitModelAutoencoder
+from .baselit import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder
 
-__all__ = ["BaseLitModel", "BaseLitModelAutoencoder"]
+__all__ = ["BaseLitModel", "BaseLitModelUsingAutoencoder", "BaseLitModelAutoencoder"]
