@@ -101,7 +101,7 @@ class BaseLitModelAutoencoder(L.LightningModule):
     def __init__(self, model, lr = 0.001):
         super().__init__()
         self.model = model            
-        self.criterion = ComplexMSELoss()
+        self.criterion = ComplexMSELoss(reduction="mean")
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         
     def forward(self, x):
@@ -110,22 +110,24 @@ class BaseLitModelAutoencoder(L.LightningModule):
     def training_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
         denoised_image, denoised_patches = self(noisy_image)
-        loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
+        #loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
+        loss = self.criterion(clean_image, denoised_image)
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)        
         return loss
     
     def validation_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
         denoised_image, denoised_patches = self(noisy_image)
-        loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
-        
+        #loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
+        loss = self.criterion(clean_image, denoised_image)
         self.log("val_loss", loss, on_epoch=True, prog_bar=True)
         return loss
     
     def test_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
         denoised_image, denoised_patches = self(noisy_image)
-        loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
+        #loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
+        loss = self.criterion(clean_image, denoised_image)
         self.log("test_loss", loss, on_step=True, prog_bar=True)
         return loss
 

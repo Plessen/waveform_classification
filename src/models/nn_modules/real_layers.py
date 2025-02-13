@@ -29,29 +29,29 @@ class ECA(nn.Module):
         
         return x * y.expand_as(x)
 
-class PatchAutoencoder(nn.Module):
+class   PatchAutoencoder(nn.Module):
     
     def __init__(self):
         super(PatchAutoencoder, self).__init__()
         
         self.encoder = nn.Sequential(
             nn.Conv2d(2, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.ELU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.ELU(),
             nn.MaxPool2d(2, 2)
         )
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.ConvTranspose2d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.ConvTranspose2d(64, 2, kernel_size=3, padding=1),
-            nn.Tanh()
+            #nn.Tanh()
         )
     
     def forward(self, x):

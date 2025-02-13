@@ -81,12 +81,12 @@ class cPatchAutoencoder(nn.Module):
         super(cPatchAutoencoder, self).__init__()
     
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=3, padding="same", bias=True, dtype=torch.complex64),
+            cConv2d(1, 64, kernel_size=3, padding="same", bias=True),
             cRelu(),
-            ComplexMaxPool2d(2, 2),
-            nn.Conv2d(64, 64, kernel_size=3, padding="same", bias=True, dtype=torch.complex64),
+            cMaxPool2d(2, 2),
+            cConv2d(64, 64, kernel_size=3, padding="same", bias=True),
             cRelu(),
-            ComplexMaxPool2d(2, 2)
+            cMaxPool2d(2, 2)
         )
         
         self.decoder = nn.Sequential(
@@ -97,14 +97,14 @@ class cPatchAutoencoder(nn.Module):
             cRelu(),
             cUpsample2d(scale_factor=2, mode='nearest'),
             nn.ConvTranspose2d(64, 1, kernel_size=3, padding=1, bias=True, dtype=torch.complex64),
-            cTanh()
+            #cTanh()
         )
     
     def forward(self, x):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
-        
+            
 class cPatchAutoencoderGrouped(nn.Module):
         
     def __init__(self, num_patches):
@@ -112,12 +112,12 @@ class cPatchAutoencoderGrouped(nn.Module):
         self.num_patches = num_patches
         
         self.encoder = nn.Sequential(
-            nn.Conv2d(1 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches, dtype=torch.complex64),
+            cConv2d(1 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches),
             cRelu(),
-            ComplexMaxPool2d(2, 2),
-            nn.Conv2d(64 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches, dtype=torch.complex64),
+            cMaxPool2d(2, 2),
+            cConv2d(64 * num_patches, 64 * num_patches, kernel_size=3, padding="same", bias=True, groups=num_patches),
             cRelu(),
-            ComplexMaxPool2d(2, 2)
+            cMaxPool2d(2, 2)
         )
         
         self.decoder = nn.Sequential(
@@ -128,7 +128,7 @@ class cPatchAutoencoderGrouped(nn.Module):
             cRelu(),
             cUpsample2d(scale_factor=2, mode='nearest'),
             nn.ConvTranspose2d(64 * num_patches, 1 * num_patches, kernel_size=3, padding=1, bias=True, groups=num_patches, dtype=torch.complex64),
-            cTanh()
+            #cTanh()
         )
     
     def forward(self, x):

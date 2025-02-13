@@ -147,7 +147,6 @@ class ComplexDenoisingAutoencoderGrouped(nn.Module):
         combined = self.combine_patches(denoised_patches)
         return combined, denoised_patches
 
-
 def test_complex_denoising_autoencoder_grouped():
     # Example parameters:
     image_size = 128
