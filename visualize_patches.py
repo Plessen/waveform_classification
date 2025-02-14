@@ -40,12 +40,11 @@ lit_model.model.eval()  # set to evaluation mode
 autoencoder = lit_model.model
 
 # Test patch extraction and recombination for all clean images.
-for i in range(clean_images.shape[0]):
-    image = clean_images[i:i+1]  # (1,1,H,W)
-    patches = autoencoder.extract_patches(image)
-    recombined = autoencoder.combine_patches(patches)
-    assert torch.allclose(image, recombined, atol=1e-6), \
-        f"Image {i} recombination failed; max diff: {(image - recombined).abs().max().item()}"
+
+patches = autoencoder.extract_patches(clean_images)
+recombined = autoencoder.combine_patches(patches)
+assert torch.allclose(clean_images, recombined, atol=1e-6), \
+    f"Imagerecombination failed; max diff: {(clean_images - recombined).abs().max().item()}"
 print("Success: All clean images are correctly reconstructed from patches.")
 
 # Run the autoencoder on the noisy images.

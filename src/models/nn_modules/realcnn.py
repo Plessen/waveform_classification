@@ -1,6 +1,8 @@
 import torch.nn as nn
 from .real_layers import ECA, PatchAutoencoder
 import torch
+from vit_pytorch import ViT
+import matplotlib.pyplot as plt
 
 class RealConvNet(nn.Module):
     
@@ -80,9 +82,9 @@ class RealDenoisingAutoencoder(nn.Module):
         self.num_patches = number_patches
         self.patches_per_dim = int(number_patches**0.5)
         self.patch_size = image_size // self.patches_per_dim
-        
+
         self.autoencoders = nn.ModuleList([PatchAutoencoder() for _ in range(self.num_patches)])
-    
+        
     def extract_patches(self, x):
         B, C, H, W = x.shape
         patches = x.unfold(2, self.patch_size, self.patch_size).unfold(3, self.patch_size, self.patch_size)
@@ -99,12 +101,23 @@ class RealDenoisingAutoencoder(nn.Module):
 
     def forward(self, x):
         patches = self.extract_patches(x)
-        denoised_patches = []
-        for i, autoencoder in enumerate(self.autoencoders):
-            patch_group = patches[i::self.num_patches, ...]
-            denoised_patch_group = autoencoder(patch_group)
-            denoised_patches.append(denoised_patch_group)
         
-        denoised_patches = torch.cat(denoised_patches, dim=0)
+        denoised_patches = torch.zeros_like(patches)
+        for i in range(self.num_patches):
+            patch_group = patches[i::self.num_patches, ...]
+            denoised_patch_group = self.autoencoders[i](patch_group)
+            denoised_patches[i::self.num_patches, ...] = denoised_patch_group
+
         combined = self.combine_patches(denoised_patches)
         return combined, denoised_patches
+    
+class RealViT(nn.Module):
+    def __init__(self):
+        super(RealViT, self).__init__()
+        self.model = ViT(image_size=128, channels=2, patch_size=16, num_classes=8, 
+                         dim=128, depth=6, heads=16, mlp_dim=256, dropout=0.3)
+    
+    def forward(self, x):
+        x = self.model(x)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x

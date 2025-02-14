@@ -34,7 +34,8 @@ class SignalDatasetComplex(Dataset):
         return clean_image, noisy_image, label
 
     def  __del__(self):
-        self.file.close()
+        if self.file:
+            self.file.close()
     
 class SignalDatasetReal(Dataset):
     def __init__(self, file_path):
@@ -65,4 +66,5 @@ class SignalDatasetReal(Dataset):
         return clean_image, noisy_image, label
 
     def __del__(self):
-        self.file.close()
+        if self.file:
+            self.file.close()

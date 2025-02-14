@@ -1,4 +1,4 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
 from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder
 from ..data.datamodules import SignalDataModule
@@ -34,6 +34,12 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "lit_model_class": BaseLitModelAutoencoder,
             "model_class": RealDenoisingAutoencoder,
             "model_args": {"image_size": image_size, "number_patches": number_patches}
+        },
+        "real-vit": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModel,
+            "model_class": RealViT,
+            "model_args": {}
         },
         "complexcnn": {
             "dataset_class": SignalDatasetComplex,

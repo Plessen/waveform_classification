@@ -3,6 +3,7 @@ import torch.nn as nn
 import lightning as L
 import torch.optim as optim
 from .lossfunctions import ComplexMSELoss
+import torch
 
 class BaseLitModel(L.LightningModule):
     def __init__(self, model, lr = 0.001):
@@ -102,7 +103,8 @@ class BaseLitModelAutoencoder(L.LightningModule):
         super().__init__()
         self.model = model            
         self.criterion = ComplexMSELoss(reduction="mean")
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.automatic_optimization = False
+        self.lr = lr
         
     def forward(self, x):
         return self.model(x)
@@ -111,9 +113,28 @@ class BaseLitModelAutoencoder(L.LightningModule):
         clean_image, noisy_image, label = batch
         denoised_image, denoised_patches = self(noisy_image)
         #loss = self.criterion(denoised_patches, self.model.extract_patches(clean_image))
-        loss = self.criterion(clean_image, denoised_image)
-        self.log("train_loss", loss, on_epoch=True, prog_bar=True)        
-        return loss
+        
+        clean_patches = self.model.extract_patches(clean_image)
+        num_patches = self.model.num_patches
+        optimizers = self.optimizers()
+        total_patch_loss = torch.tensor(0.0, device=self.device, requires_grad=True)
+        for i, optimizer in enumerate(optimizers):
+            patch_group = denoised_patches[i::num_patches, ...]
+            target_group = clean_patches[i::num_patches, ...]
+            patch_loss = self.criterion(patch_group, target_group)
+            total_patch_loss = total_patch_loss + patch_loss
+        
+        for optimizer in optimizers:
+            optimizer.zero_grad()
+            
+        self.manual_backward(total_patch_loss)   
+             
+        for optimizer in optimizers:
+            optimizer.step()
+            
+        loss_full = self.criterion(clean_image, denoised_image)
+        self.log("train_loss", loss_full, on_epoch=True, prog_bar=True)        
+        #return loss_full
     
     def validation_step(self, batch, batch_idx):
         clean_image, noisy_image, label = batch
@@ -132,4 +153,6 @@ class BaseLitModelAutoencoder(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return self.optimizer
+        optimizers = [optim.Adam(ae.parameters(), lr=self.lr) for ae in self.model.autoencoders]
+        return optimizers
+    

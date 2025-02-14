@@ -29,7 +29,7 @@ class ECA(nn.Module):
         
         return x * y.expand_as(x)
 
-class   PatchAutoencoder(nn.Module):
+class PatchAutoencoder(nn.Module):
     
     def __init__(self):
         super(PatchAutoencoder, self).__init__()
