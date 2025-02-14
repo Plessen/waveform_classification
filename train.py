@@ -10,7 +10,7 @@ def main(args):
     batch_sizes = {'train': args.train_batch_size, 'val': args.val_batch_size, 'test': args.test_batch_size}
     model, data_module, lit_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
                                        args.learning_rate, image_size=128,
-                                       number_patches=4, checkpoint_path=args.checkpoint_path, 
+                                       number_patches=16, checkpoint_path=args.checkpoint_path, 
                                        pretrained_model_name=args.pretrained_model_name, freeze=args.freeze)
 
     logger = CSVLogger("logs", name=args.model_name, version=args.version)
