@@ -14,8 +14,8 @@ def main(args):
                                        pretrained_model_name=args.pretrained_model_name, freeze=args.freeze)
 
     logger = CSVLogger("logs", name=args.model_name, version=args.version)
-    checkpoint_callback = ModelCheckpoint(monitor='val_loss', dirpath="logs/{}/version_{}/checkpoints".format(args.model_name, args.version), filename=args.model_name + '-{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}', save_top_k=1, mode='min')
-    early_stopping_callback = EarlyStopping(monitor='val_loss', patience=args.patience, mode='min')
+    checkpoint_callback = ModelCheckpoint(monitor='val_acc', dirpath="logs/{}/version_{}/checkpoints".format(args.model_name, args.version), filename=args.model_name + '-{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}', save_top_k=1, mode='max')
+    early_stopping_callback = EarlyStopping(monitor='val_acc', patience=args.patience, mode='max')
     trainer = L.Trainer(max_epochs=args.max_epochs, accelerator="gpu", devices=1, logger=logger, log_every_n_steps=50, callbacks=[checkpoint_callback, early_stopping_callback])
     trainer.fit(model, data_module)
     

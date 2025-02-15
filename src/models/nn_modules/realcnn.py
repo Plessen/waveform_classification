@@ -3,6 +3,7 @@ from .real_layers import ECA, PatchAutoencoder
 import torch
 from vit_pytorch import ViT
 import matplotlib.pyplot as plt
+from vit_pytorch.cct import CCT
 
 class RealConvNet(nn.Module):
     
@@ -115,7 +116,7 @@ class RealViT(nn.Module):
     def __init__(self):
         super(RealViT, self).__init__()
         self.model = ViT(image_size=128, channels=2, patch_size=16, num_classes=8, 
-                         dim=128, depth=6, heads=16, mlp_dim=256, dropout=0.3)
+                         dim=128, depth=6, heads=12, mlp_dim=128, dropout=0.3)
     
     def forward(self, x):
         x = self.model(x)
