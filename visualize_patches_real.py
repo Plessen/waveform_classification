@@ -16,7 +16,7 @@ image_size = 128         # adjust as needed
 num_patches = 16          # e.g. 2x2 grid
 num_images = 10          # number of images to process
 data_path = r'C:\Users\batistd1\Documents\MATLAB\Thesis\FSSTn-master\FSSTn-master\DataGeneration\data\input_test_nearest_SST.h5'
-checkpoint_path = r'C:\Users\batistd1\Documents\MATLAB\Thesis\DL\waveform_classification\logs\real_autoencoder_mode_sst_nearest\version_0\checkpoints\real_autoencoder_mode_sst_nearest-epoch=01-val_loss=41125.62-val_acc=0.00.ckpt'
+checkpoint_path = r'C:\Users\batistd1\Documents\MATLAB\Thesis\DL\waveform_classification\logs\real_autoencoder_mode_sst_nearest\version_0\checkpoints\real_autoencoder_mode_sst_nearest-epoch=64-val_loss=0.00-val_acc=0.00.ckpt'
 # Set device to CUDA if available.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

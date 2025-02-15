@@ -1,4 +1,4 @@
-function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, num_workers, seed, train)
+function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transform, num_workers, seed, train, sigma)
     
     %pool = initParPool();
     
@@ -23,7 +23,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     end
 
     for snr_index = 1:length(SNR)
-         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
+         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '.h5']);
          h5create(prefix_clean, '/clean_images/images_real', [image_size, image_size, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/clean_images/images_imag', [image_size, image_size, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_real', [image_size, image_size, total_signals_per_SNR], 'Datatype', 'double');
@@ -36,7 +36,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
         s = RandStream.create('mt19937ar','Seed', seed + snr_index);
         RandStream.setGlobalStream(s);
 
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '.h5']);
         start_index = 1;
         input_batch = complex(zeros(image_size, image_size, signals_per_SNR));
         input_noisy_batch = complex(zeros(image_size, image_size, signals_per_SNR));
@@ -63,7 +63,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_LFM(N(idx),fs,A,fc(idx),B(idx),sweepDirections{randi(2)});
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -82,7 +82,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                         NumHop = randperm(Lc(randi(4)));
                         wav = type_Costas(N(idx), fs, A, fcmin(idx), NumHop);
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -106,7 +106,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                         end
                         wav = type_Barker(Ncc(randi(length(Ncc))), fs, A, fc(idx), phaseCode);
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -122,7 +122,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_Frank(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -138,7 +138,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_P1(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -154,7 +154,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_P2(Ncc(randi(3)), fs, A, fc(idx), M(randi(2)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end            
@@ -170,7 +170,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_P3(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -186,7 +186,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_P4(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -200,9 +200,9 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
     if train
         disp("Starting data shuffling");
         %combine_h5_files_shuffled(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
-        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
+        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma);
     else
-        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
+        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma);
     end
 end
 
@@ -217,7 +217,7 @@ function write_batch_to_h5(prefix_clean, input_batch, input_noisy_batch, output_
     h5write(prefix_clean, '/labels', output_data_batch, [1 start], [size(output_data_batch, 1) signals_per_SNR]);
 end
 
-function combine_h5_files(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir)
+function combine_h5_files(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir, sigma)
 
     if train
         prefix = 'input_train_';
@@ -226,8 +226,8 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
     end
 
     total_signals = snr_length * signals_per_SNR * num_waveforms;
-    
-    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '.h5']);
+  
+    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '.h5']);
 
     h5create(combined_clean_file, '/clean_images/images_real', [image_size, image_size, total_signals], 'Datatype', 'double');
     h5create(combined_clean_file, '/clean_images/images_imag', [image_size, image_size, total_signals], 'Datatype', 'double');
@@ -237,7 +237,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     current_index = 1;
     for snr_index = 1:snr_length
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '.h5']);
 
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
@@ -263,7 +263,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
     end
 end
 
-function combine_h5_files_shuffled(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir)
+function combine_h5_files_shuffled(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir, sigma)
     if train
         prefix = 'input_train_';
     else
@@ -271,7 +271,7 @@ function combine_h5_files_shuffled(resize_method, transform, train, snr_length, 
     end
     total_signals = snr_length * signals_per_SNR * num_waveforms;
     
-    combined_file = fullfile(output_dir, [prefix resize_method '_' transform '.h5']);
+    combined_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '.h5']);
     h5create(combined_file, '/clean_images/images_real', [image_size, image_size, total_signals], 'Datatype', 'double');
     h5create(combined_file, '/clean_images/images_imag', [image_size, image_size, total_signals], 'Datatype', 'double');
     h5create(combined_file, '/noisy_images/images_real', [image_size, image_size, total_signals], 'Datatype', 'double');
@@ -283,7 +283,7 @@ function combine_h5_files_shuffled(resize_method, transform, train, snr_length, 
     permutation = randperm(total_signals);
     
     for snr_index = 1:snr_length
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '.h5']);
         disp(['Running on SNR index ' int2str(snr_index)]);
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
