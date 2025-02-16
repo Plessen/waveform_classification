@@ -4,13 +4,17 @@ import lightning as L
 import torch.optim as optim
 from .lossfunctions import ComplexMSELoss
 import torch
+from pretty_confusion_matrix import pp_matrix_from_data
 
 class BaseLitModel(L.LightningModule):
-    def __init__(self, model, lr = 0.001):
+    def __init__(self, model, lr = 0.001, **kwargs):
         super().__init__()
         self.model = model
         self.criterion = nn.NLLLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.kwargs = kwargs
+        self.preds = []
+        self.labels = []
         
     def forward(self, x):
         return self.model(x)
@@ -38,15 +42,39 @@ class BaseLitModel(L.LightningModule):
         output = self.model(noisy_image)
         loss = self.criterion(output, label)
         acc = (output.argmax(dim = 1) == label).float().mean()
+        
+        self.preds.append(output.argmax(dim = 1).detach().cpu())
+        self.labels.append(label.detach().cpu())
+        
         self.log("test_acc", acc, on_step=True, prog_bar=True)
         self.log("test_loss", loss, on_step=True, prog_bar=True)
         return loss
+
+    def on_test_epoch_end(self):
+        preds = torch.cat(self.preds).numpy()
+        labels = torch.cat(self.labels).numpy()
+        
+        number_waveforms = self.kwargs.get("number_waveforms")
+        signals_per_snr = self.kwargs.get("signals_per_snr")
+        
+        number_snr = labels.shape[0] // (number_waveforms * signals_per_snr)
+        print(labels.shape)
+        if number_waveforms == 8:
+            col = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4']
+        else:
+            col = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4']
+            
+        for i in range(number_snr):
+            path_to_save_img = self.logger.log_dir + "/confusion_matrix_{}.png".format(i)
+            snr_labels = labels[i * number_waveforms * signals_per_snr: (i + 1) * number_waveforms * signals_per_snr]
+            snr_preds = preds[i * number_waveforms * signals_per_snr: (i + 1) * number_waveforms * signals_per_snr]
+            pp_matrix_from_data(snr_labels, snr_preds, cmap="viridis", columns=col, path_to_save_img=path_to_save_img)
 
     def configure_optimizers(self):
         return self.optimizer
      
 class BaseLitModelUsingAutoencoder(L.LightningModule):
-    def __init__(self, model, lr = 0.001):
+    def __init__(self, model, lr = 0.001, **kwargs):
         super().__init__()
         self.model = model            
         self.criterion_classifier = nn.NLLLoss()
@@ -99,7 +127,7 @@ class BaseLitModelUsingAutoencoder(L.LightningModule):
         return self.optimizer
 
 class BaseLitModelAutoencoder(L.LightningModule):
-    def __init__(self, model, lr = 0.001):
+    def __init__(self, model, lr = 0.001, **kwargs):
         super().__init__()
         self.model = model            
         self.criterion = ComplexMSELoss(reduction="mean")

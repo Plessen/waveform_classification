@@ -29,6 +29,9 @@ def parse_args():
     parser.add_argument("--checkpoint_path", type=str, default=None, help="Path to the checkpoint file.")
     parser.add_argument("--pretrained_model_name", type=str, default=None, help="Name of the pretrained model to use.")
     parser.add_argument("--freeze", action="store_true", default=False, help="Freeze the pretrained model.")
+    parser.add_argument("--num_waveforms", type=int, required=True, help="Number of waveforms to classify.")
+    parser.add_argument("--signals_per_snr", type=int, required=True, help="Number of signals per snr per waveform.")
+    parser.add_argument("--test", action="store_true", default=False, help="Run in test mode.")
     
     return parser.parse_args()
 

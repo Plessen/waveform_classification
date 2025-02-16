@@ -9,7 +9,7 @@ def freeze_model(model):
         param.requires_grad = False
     return model
 
-def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, lr, image_size=128, number_patches=16, checkpoint_path=None, pretrained_model_name=None, freeze = False):
+def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, lr, image_size=128, number_patches=16, checkpoint_path=None, pretrained_model_name=None, freeze = False, number_waveforms = 8, signals_per_snr = 1000):
     model_config = {
         "realcnn": {
             "dataset_class": SignalDatasetReal,
@@ -76,7 +76,7 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             raise ValueError(f"Invalid pretrained model: {pretrained_model_name}")
         
         pretrained_cfg = model_config[pretrained_model_name]
-        pretrained_model = pretrained_cfg["lit_model_class"].load_from_checkpoint(checkpoint_path,model=pretrained_cfg["model_class"](**pretrained_cfg["model_args"]),lr=lr).model
+        pretrained_model = pretrained_cfg["lit_model_class"].load_from_checkpoint(checkpoint_path,model=pretrained_cfg["model_class"](**pretrained_cfg["model_args"]),lr=lr,number_waveforms=number_waveforms, signals_per_snr = signals_per_snr).model
         if freeze:
             pretrained_model = freeze_model(pretrained_model)
             
@@ -103,9 +103,9 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
     # Instantiate model
     model_instance = cfg["model_class"](**cfg["model_args"])
     if checkpoint_path and not pretrained_model_name:
-        model = cfg["lit_model_class"].load_from_checkpoint(checkpoint_path, model=model_instance, lr=lr)
+        model = cfg["lit_model_class"].load_from_checkpoint(checkpoint_path, model=model_instance, lr=lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
     else:
-        model = cfg["lit_model_class"](model_instance, lr)
+        model = cfg["lit_model_class"](model_instance, lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
 
     # Create datamodule
     data_module = SignalDataModule(cfg["dataset_class"], data_paths, batch_sizes, num_workers, val_split)
