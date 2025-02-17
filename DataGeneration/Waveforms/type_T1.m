@@ -4,11 +4,11 @@ Tc = 1/fc;
 t = 0:Ts:Tc-Ts;
 pw = Tc*Ng;
 
-for jj = 1:Ng-1
+for jj = 1:Ng
     phaseCode(jj,:) = mod(2*pi/Nps*floor((Ng*t-jj*pw)*jj*Nps/pw),2*pi);
 end
 [u,v] = size(phaseCode);
 phaseCode = reshape(phaseCode',[1 u*v]);
-s = BPSK(2, fs, A, fc, phaseCode);
+s = BPSK(Ng, fs, A, fc, phaseCode);
 end
 
