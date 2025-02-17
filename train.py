@@ -6,6 +6,7 @@ from src.utils import parse_args
 from src.models.factory import model_factory
 
 def main(args):
+    L.seed_everything(42, workers=True)
     data_paths = {'train': args.train_data_path, 'test': args.test_data_path}
     batch_sizes = {'train': args.train_batch_size, 'val': args.val_batch_size, 'test': args.test_batch_size}
     model, data_module, lit_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
@@ -18,7 +19,7 @@ def main(args):
     logger = CSVLogger("logs", name=args.model_name, version=args.version)
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', dirpath="logs/{}/version_{}/checkpoints".format(args.model_name, args.version), filename=args.model_name + '-{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}', save_top_k=1, mode='max')
     early_stopping_callback = EarlyStopping(monitor='val_acc', patience=args.patience, mode='max')
-    trainer = L.Trainer(max_epochs=args.max_epochs, accelerator="gpu", devices=1, logger=logger, log_every_n_steps=50, callbacks=[checkpoint_callback, early_stopping_callback])
+    trainer = L.Trainer(max_epochs=args.max_epochs, accelerator="gpu", devices=1, logger=logger, log_every_n_steps=50, callbacks=[checkpoint_callback, early_stopping_callback], deterministic=True)
     
     if not args.test:
         trainer.fit(model, data_module)

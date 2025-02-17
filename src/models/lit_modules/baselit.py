@@ -183,4 +183,51 @@ class BaseLitModelAutoencoder(L.LightningModule):
     def configure_optimizers(self):
         optimizers = [optim.Adam(ae.parameters(), lr=self.lr) for ae in self.model.autoencoders]
         return optimizers
+
+class BaseLitModelGrouped(L.LightningModule):
+    def __init__(self, model, lr = 0.001, **kwargs):
+        super().__init__()
+        self.model = model
+        self.criterion = nn.NLLLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        clean_image, noisy_image, label = batch
+        output = self(noisy_image)
+        
+        group_labels = torch.where(torch.logical_or(label == 0, label == 7), torch.tensor(0, device=label.device), torch.tensor(1, device=label.device))
+        loss = self.criterion(output, group_labels)
+        self.log("train_loss", loss, on_epoch=True, prog_bar=True)
+        return loss
     
+    def validation_step(self, batch, batch_idx):
+        clean_image, noisy_image, label = batch
+        output = self.model(noisy_image)
+        
+        group_labels = torch.where(torch.logical_or(label == 0, label == 7), torch.tensor(0, device=label.device), torch.tensor(1, device=label.device))
+        loss = self.criterion(output, group_labels)
+        
+        acc = (output.argmax(dim = 1) == group_labels).float().mean()
+        self.log("val_loss", loss, on_epoch=True, prog_bar=True)
+        self.log("val_acc", acc, on_epoch=True, prog_bar=True)
+        
+        return loss
+    
+    def test_step(self, batch, batch_idx):
+        clean_image, noisy_image, label = batch
+        output = self.model(noisy_image)
+        
+        group_labels = torch.where(torch.logical_or(label == 0, label == 7), torch.tensor(0, device=label.device), torch.tensor(1, device=label.device))
+        loss = self.criterion(output, group_labels)
+    
+        acc = (output.argmax(dim = 1) == group_labels).float().mean()
+        self.log("test_acc", acc, on_step=True, prog_bar=True)
+        self.log("test_loss", loss, on_step=True, prog_bar=True)
+        return loss
+
+    def configure_optimizers(self):
+        return self.optimizer
+

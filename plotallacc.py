@@ -64,3 +64,4 @@ SNR = [i for i in range(-14, -2, 2)]
 waveform_list = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4']
 label_list = ["nearest", "bilinear", "bicubic", "lanczos2", "lanczos3"]
 plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list)
+plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)

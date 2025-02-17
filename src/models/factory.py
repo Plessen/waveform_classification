@@ -1,6 +1,6 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
-from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder
+from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped
 from ..data.datamodules import SignalDataModule
 from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
 
@@ -15,13 +15,13 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNet,
-            "model_args": {}
+            "model_args": {number_waveforms: number_waveforms}
         },
         "realcnn-attention": {
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNetAttention,
-            "model_args": {}
+            "model_args": {number_waveforms: number_waveforms}
         },
         "realcnn-autoencoder": {
             "dataset_class": SignalDatasetReal,
@@ -39,6 +39,18 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealViT,
+            "model_args": {number_waveforms: number_waveforms}
+        },
+        "real-grouped": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModelGrouped,
+            "model_class": RealConvNetAttentionGrouped,
+            "model_args": {}
+        },
+        "real-grouped-classifier": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModel,
+            "model_class": RealEnsembleClassifier,
             "model_args": {}
         },
         "complexcnn": {
@@ -107,8 +119,11 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
     else:
         model = cfg["lit_model_class"](model_instance, lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
 
+    desired_labels = None
+    if model_name == "real-grouped":
+        desired_labels = [0, 1, 4, 7]
     # Create datamodule
-    data_module = SignalDataModule(cfg["dataset_class"], data_paths, batch_sizes, num_workers, val_split)
+    data_module = SignalDataModule(cfg["dataset_class"], data_paths, batch_sizes, num_workers, val_split, desired_labels=desired_labels)
     lit_model_class = cfg["lit_model_class"]
     
     return model, data_module, lit_model_class
