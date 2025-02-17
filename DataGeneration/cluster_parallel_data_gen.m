@@ -203,7 +203,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_T1(fs, A, fc(idx),Nps,Ng(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -221,7 +221,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_T2(fs, A, fc(idx),Nps,Ng(randi(3)));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -229,7 +229,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     start_index = start_index + signals_per_SNR;
                     
                 case 'T3'
-                    disp(['Generating ',waveform, ' waveform ...']);
+                    disp(['Generating ',waveform, ' waveform for SNR ', int2str(SNR(snr_index))]);
                     fc = linspace(fs/6,fs/5,signals_per_SNR);
                     fc=fc(randperm(signals_per_SNR));
                     B = linspace(fs/20,fs/10,signals_per_SNR);
@@ -240,7 +240,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_T3(N(idx), fs, A, fc(idx), Nps,B(idx));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
@@ -248,7 +248,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     start_index = start_index + signals_per_SNR;
                     
                 case 'T4'
-                    disp(['Generating ',waveform, ' waveform ...']);
+                    disp(['Generating ',waveform, ' waveform for SNR ', int2str(SNR(snr_index))]);
                     fc = linspace(fs/6,fs/5,signals_per_SNR);
                     fc=fc(randperm(signals_per_SNR));
                     B = linspace(fs/20,fs/10,signals_per_SNR);
@@ -259,7 +259,7 @@ function [] = cluster_parallel_data_gen(signals_per_SNR, resize_method, transfor
                     for idx = 1:signals_per_SNR
                         wav = type_T4(N(idx), fs, A, fc(idx), Nps,B(idx));
                         [noisy_signal, real_noise_std] = merge_noise(wav, SNR(snr_index));
-                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform);
+                        resized_images = transform_data(wav, noisy_signal, 1024, image_size, real_noise_std, resize_method, transform, sigma);
                         input_batch(:, :,idx) = resized_images.transform_resized;
                         input_noisy_batch(:, :,idx) = resized_images.transform_noisy_resized;
                     end
