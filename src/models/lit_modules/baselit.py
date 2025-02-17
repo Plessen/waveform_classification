@@ -58,7 +58,7 @@ class BaseLitModel(L.LightningModule):
         signals_per_snr = self.kwargs.get("signals_per_snr")
         
         number_snr = labels.shape[0] // (number_waveforms * signals_per_snr)
-        print(labels.shape)
+        
         if number_waveforms == 8:
             col = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4']
         else:

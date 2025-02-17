@@ -9,19 +9,39 @@ def freeze_model(model):
         param.requires_grad = False
     return model
 
-def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, lr, image_size=128, number_patches=16, checkpoint_path=None, pretrained_model_name=None, freeze = False, number_waveforms = 8, signals_per_snr = 1000):
+def load_pretrained_model(model_config, model_name_list, chekpoint_path_list, lr, number_waveforms, signals_per_snr, freeze):
+    loaded_models = []
+    for model_name, ckpt_path in zip(model_name_list, chekpoint_path_list):
+        if model_name not in model_config:
+            raise ValueError(f"Unsupported model: {model_name}")
+        cfg = model_config[model_name]
+
+        # Instantiate model
+        model_instance = cfg["model_class"](**cfg["model_args"])
+        model = cfg["lit_model_class"].load_from_checkpoint(ckpt_path, model=model_instance, lr=lr, 
+                                                            number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
+        base_model = model.model
+
+        if freeze:
+            base_model = freeze_model(base_model)
+        loaded_models.append(base_model)
+    
+    return loaded_models
+
+def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, lr, image_size=128, number_patches=16, checkpoint_path_list=[], pretrained_model_name_list=[], freeze = False, number_waveforms = 8, signals_per_snr = 1000):
+
     model_config = {
         "realcnn": {
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNet,
-            "model_args": {number_waveforms: number_waveforms}
+            "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-attention": {
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNetAttention,
-            "model_args": {number_waveforms: number_waveforms}
+            "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-autoencoder": {
             "dataset_class": SignalDatasetReal,
@@ -39,7 +59,7 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealViT,
-            "model_args": {number_waveforms: number_waveforms}
+            "model_args": {"number_waveforms": number_waveforms}
         },
         "real-grouped": {
             "dataset_class": SignalDatasetReal,
@@ -79,43 +99,34 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
         }
     }
 
-    # Load pretrained model if specified
-    pretrained_model = None
-    if pretrained_model_name:
-        if checkpoint_path is None:
-            raise ValueError("Checkpoint path required for pretrained model")
-        if pretrained_model_name not in model_config:
-            raise ValueError(f"Invalid pretrained model: {pretrained_model_name}")
-        
-        pretrained_cfg = model_config[pretrained_model_name]
-        pretrained_model = pretrained_cfg["lit_model_class"].load_from_checkpoint(checkpoint_path,model=pretrained_cfg["model_class"](**pretrained_cfg["model_args"]),lr=lr,number_waveforms=number_waveforms, signals_per_snr = signals_per_snr).model
-        if freeze:
-            pretrained_model = freeze_model(pretrained_model)
-            
-    # Handle autoencoder special case
-    if model_name == "complexcnn-autoencoder":
-        model_config[model_name]["model_args"]["model"] = ComplexConvNetAttention()
-        if not pretrained_model:
-            model_config[model_name]["model_args"]["autoencoder"] = ComplexDenoisingAutoencoder(image_size, number_patches)
-        else: 
-            model_config[model_name]["model_args"]["autoencoder"] = pretrained_model
-
-    if model_name == "realcnn-autoencoder":
-        model_config[model_name]["model_args"]["model"] = RealConvNetAttention()
-        if not pretrained_model:
-            model_config[model_name]["model_args"]["autoencoder"] = RealDenoisingAutoencoder(image_size, number_patches)
-        else: 
-            model_config[model_name]["model_args"]["autoencoder"] = pretrained_model
-            
-    # Validate model name
+        # Validate model name
+    
     if model_name not in model_config:
         raise ValueError(f"Unsupported model: {model_name}")
+    # Load pretrained model if specified
+    pretrained_models = load_pretrained_model(model_config, pretrained_model_name_list, checkpoint_path_list, lr, number_waveforms, signals_per_snr, freeze) 
+    # Populate model arguments
+    
     cfg = model_config[model_name]
+    if model_name == "complexcnn-autoencoder":
+        cfg["model_args"]["model"] = ComplexConvNetAttention()
+        cfg["model_args"]["autoencoder"] = ComplexDenoisingAutoencoder(image_size, number_patches) if len(pretrained_models) == 0 else pretrained_models[0]
 
+    if model_name == "realcnn-autoencoder":
+        cfg["model_args"]["model"] = RealConvNetAttention()
+        cfg["model_args"]["autoencoder"] = RealDenoisingAutoencoder(image_size, number_patches) if len(pretrained_models) == 0 else pretrained_models[0]
+
+    if model_name=="real-grouped-classifier":
+        if len(pretrained_models) != 2:
+            raise ValueError("Two pretrained models are required for real-grouped-classifier")
+        
+        cfg["model_args"]["model_classifier"] = pretrained_models[0]
+        cfg["model_args"]["model_group"] = pretrained_models[1]
+                
     # Instantiate model
     model_instance = cfg["model_class"](**cfg["model_args"])
-    if checkpoint_path and not pretrained_model_name:
-        model = cfg["lit_model_class"].load_from_checkpoint(checkpoint_path, model=model_instance, lr=lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
+    if len(checkpoint_path_list) > 0 and len(pretrained_models) == 0:
+        model = cfg["lit_model_class"].load_from_checkpoint(checkpoint_path_list[0], model=model_instance, lr=lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
     else:
         model = cfg["lit_model_class"](model_instance, lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
 

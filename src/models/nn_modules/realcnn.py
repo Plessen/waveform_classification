@@ -25,9 +25,9 @@ class RealConvNet(nn.Module):
             nn.AvgPool2d(2, 2),
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(32*16*16, 128 *  number_waveforms  /  8), 
+            nn.Linear(32*16*16, int(128 *  number_waveforms  /  8)), 
             nn.ELU(),
-            nn.Linear(128 *  number_waveforms  /  8, number_waveforms)
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
         )
     def forward(self, x):
         x = self.layers(x)
@@ -37,7 +37,6 @@ class RealConvNet(nn.Module):
 class RealConvNetAttention(nn.Module):
     def __init__(self, number_waveforms):
         super(RealConvNetAttention, self).__init__()
-        
         self.layers = nn.Sequential(
             nn.Conv2d(2, 8, (3, 3), padding="same"),
             nn.BatchNorm2d(8),
@@ -56,9 +55,9 @@ class RealConvNetAttention(nn.Module):
             nn.AvgPool2d(2, 2),
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(32*16*16, 128 *  number_waveforms  /  8),
+            nn.Linear(32*16*16, int(128 *  number_waveforms  /  8)),
             nn.ELU(),
-            nn.Linear(128 *  number_waveforms  /  8, number_waveforms)
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
         )
     def forward(self, x):
         x = self.layers(x)
