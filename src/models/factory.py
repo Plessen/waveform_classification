@@ -1,4 +1,4 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCvT
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCCT, RealCvT
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
 from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped
 from ..data.datamodules import SignalDataModule
@@ -67,6 +67,12 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "model_class": RealCvT,
             "model_args": {"number_waveforms": number_waveforms}
         },
+        "real-cct": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModel,
+            "model_class": RealCCT,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
         "real-grouped": {
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModelGrouped,
@@ -132,6 +138,7 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
     # Instantiate model
     model_instance = cfg["model_class"](**cfg["model_args"])
     if len(checkpoint_path_list) > 0 and len(pretrained_models) == 0:
+        print("Loading model from checkpoint")
         model = cfg["lit_model_class"].load_from_checkpoint(checkpoint_path_list[0], model=model_instance, lr=lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)
     else:
         model = cfg["lit_model_class"](model_instance, lr, number_waveforms=number_waveforms, signals_per_snr = signals_per_snr)

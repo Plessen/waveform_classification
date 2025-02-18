@@ -157,32 +157,56 @@ class RealViT(nn.Module):
 
 class RealCvT(nn.Module):
     def __init__(self, number_waveforms):
-        super(RealViT, self).__init__()
+        super(RealCvT, self).__init__()
         self.model = CvT(
             num_classes = number_waveforms,
             s1_emb_dim = 64,        # Stage 1: Embedding dimension
             s1_emb_kernel = 7,      # Convolution kernel for token embedding
             s1_emb_stride = 4,      # Stride for spatial downsampling
             s1_proj_kernel = 3,     # Kernel for attention projection
-            s1_kv_stride = 2,       # Stride for key/value downsampling
+            s1_kv_proj_stride  = 2,       # Stride for key/value downsampling
             s1_heads = 1,           # Number of attention heads
             s1_depth = 1,           # Number of Transformer blocks
             s2_emb_dim = 128,       # Stage 2: Increased embedding dimension
             s2_emb_kernel = 3,
             s2_emb_stride = 2,
             s2_proj_kernel = 3,
-            s2_kv_stride = 2,
+            s2_kv_proj_stride  = 2,
             s2_heads = 2,
             s2_depth = 2,
             s3_emb_dim = 256,       # Stage 3: Final embedding dimension
             s3_emb_kernel = 3,
             s3_emb_stride = 2,
             s3_proj_kernel = 3,
-            s3_kv_stride = 2,
+            s3_kv_proj_stride  = 2,
             s3_heads = 4,
             s3_depth = 2,
             dropout=0.3,
             channels = 2            # Input channels (I/Q components)
+        )
+    
+    def forward(self, x):
+        x = self.model(x)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x
+    
+class RealCCT(nn.Module):
+    def __init__(self, number_waveforms):
+        super(RealCCT, self).__init__()
+        self.model = CCT(
+            img_size = (128, 128),   # Input shape matches radar I/Q components
+            num_classes = number_waveforms,
+            n_input_channels=2,
+            embedding_dim = 128,     # Reduced from typical 256/512
+            n_conv_layers = 2,       # Lightweight convolutional tokenization
+            kernel_size = 3,
+            stride = 2,
+            padding = 1,
+            pooling_kernel_size = 3,
+            pooling_stride = 2,
+            num_layers = 6,          # Shallow depth with efficient attention
+            num_heads = 4,           # Fewer attention heads
+            mlp_ratio = 2,           # Narrower MLP expansion
         )
     
     def forward(self, x):
@@ -216,8 +240,11 @@ class RealEnsembleClassifier(nn.Module):
         
         condition0 = torch.logical_and(group_predictions == 0, indices) #P4 group
         condition1 = torch.logical_and(group_predictions == 1, indices) #P1 group
-        mask[condition0, 7] = 0
-        mask[condition1, 4] = 0
+        #mask[condition0, 4] = float('inf')
+        #mask[condition1, 7] = float('inf')
 
-        masked_outputs = outputs * mask
-        return masked_outputs
+        outputs[condition0, 4] = float('-inf')
+        outputs[condition1, 7] = float('-inf')
+        #masked_outputs = outputs * mask
+        #return masked_outputs
+        return outputs
