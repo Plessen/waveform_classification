@@ -4,6 +4,7 @@ import torch
 from vit_pytorch import ViT
 import matplotlib.pyplot as plt
 from vit_pytorch.cct import CCT
+from vit_pytorch.cvt import CvT
 
 class RealConvNet(nn.Module):
     
@@ -86,9 +87,9 @@ class RealConvNetAttentionGrouped(nn.Module):
             nn.AvgPool2d(2, 2),
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(32*16*16, 64),
+            nn.Linear(32*16*16, 128),
             nn.ELU(),
-            nn.Linear(64, 2)
+            nn.Linear(128, 2)
         )
     
     def forward(self, x):
@@ -153,7 +154,42 @@ class RealViT(nn.Module):
         x = self.model(x)
         x = nn.functional.log_softmax(x, dim=1)
         return x
+
+class RealCvT(nn.Module):
+    def __init__(self, number_waveforms):
+        super(RealViT, self).__init__()
+        self.model = CvT(
+            num_classes = number_waveforms,
+            s1_emb_dim = 64,        # Stage 1: Embedding dimension
+            s1_emb_kernel = 7,      # Convolution kernel for token embedding
+            s1_emb_stride = 4,      # Stride for spatial downsampling
+            s1_proj_kernel = 3,     # Kernel for attention projection
+            s1_kv_stride = 2,       # Stride for key/value downsampling
+            s1_heads = 1,           # Number of attention heads
+            s1_depth = 1,           # Number of Transformer blocks
+            s2_emb_dim = 128,       # Stage 2: Increased embedding dimension
+            s2_emb_kernel = 3,
+            s2_emb_stride = 2,
+            s2_proj_kernel = 3,
+            s2_kv_stride = 2,
+            s2_heads = 2,
+            s2_depth = 2,
+            s3_emb_dim = 256,       # Stage 3: Final embedding dimension
+            s3_emb_kernel = 3,
+            s3_emb_stride = 2,
+            s3_proj_kernel = 3,
+            s3_kv_stride = 2,
+            s3_heads = 4,
+            s3_depth = 2,
+            dropout=0.3,
+            channels = 2            # Input channels (I/Q components)
+        )
     
+    def forward(self, x):
+        x = self.model(x)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x
+   
 class RealEnsembleClassifier(nn.Module):
     
     def __init__(self, model_classifier, model_group):
@@ -163,7 +199,7 @@ class RealEnsembleClassifier(nn.Module):
         self.model_group = model_group
         
     def forward(self, x):
-        outputs = self.model_classifier(x)
+        outputs = self.model_classifier(x) #log_softmax probabilities
         predictions = outputs.argmax(dim = 1)
         
         group_outputs = self.model_group(x)
@@ -173,12 +209,15 @@ class RealEnsembleClassifier(nn.Module):
         num_predictions = outputs.size(0)
         device = outputs.device
         
-        grouped_labels = torch.tensor([0, 1, 4, 7], device=device)
+        grouped_labels = torch.tensor([4, 7], device=device)
         indices = torch.isin(predictions, grouped_labels)
         
         mask = torch.ones((num_predictions, num_classes), device=device)
-        mask[torch.logical_and(group_predictions == 0, indices), [1, 4]] = 0
-        mask[torch.logical_and(group_predictions == 1, indices), [0, 7]] = 0
         
+        condition0 = torch.logical_and(group_predictions == 0, indices) #P4 group
+        condition1 = torch.logical_and(group_predictions == 1, indices) #P1 group
+        mask[condition0, 7] = 0
+        mask[condition1, 4] = 0
+
         masked_outputs = outputs * mask
         return masked_outputs

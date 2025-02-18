@@ -6,7 +6,7 @@ from src.utils import parse_args
 from src.models.factory import model_factory
 
 def main(args):
-    L.seed_everything(42, workers=True)
+    #L.seed_everything(42, workers=True)
     data_paths = {'train': args.train_data_path, 'test': args.test_data_path}
     batch_sizes = {'train': args.train_batch_size, 'val': args.val_batch_size, 'test': args.test_batch_size}
     model, data_module, lit_module = model_factory(args.architecture, data_paths, batch_sizes, args.num_workers, args.val_split, 
@@ -25,7 +25,7 @@ def main(args):
         trainer.fit(model, data_module)
         
         best_checkpoint_path = checkpoint_callback.best_model_path
-        test_model = lit_module.load_from_checkpoint(best_checkpoint_path, model = model.model, number_waveforms=args.number_waveforms, signals_per_snr = args.signals_per_snr)
+        test_model = lit_module.load_from_checkpoint(best_checkpoint_path, model = model.model, number_waveforms=args.num_waveforms, signals_per_snr = args.signals_per_snr)
         trainer.test(test_model, datamodule=data_module)
     else:
         trainer.test(model, datamodule=data_module)

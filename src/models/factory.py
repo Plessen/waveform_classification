@@ -1,4 +1,4 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCvT
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
 from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped
 from ..data.datamodules import SignalDataModule
@@ -59,6 +59,12 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealViT,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
+        "real-cvt": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModel,
+            "model_class": RealCvT,
             "model_args": {"number_waveforms": number_waveforms}
         },
         "real-grouped": {
@@ -132,7 +138,7 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
 
     desired_labels = None
     if model_name == "real-grouped":
-        desired_labels = [0, 1, 4, 7]
+        desired_labels = [4, 7]
     # Create datamodule
     data_module = SignalDataModule(cfg["dataset_class"], data_paths, batch_sizes, num_workers, val_split, desired_labels=desired_labels)
     lit_model_class = cfg["lit_model_class"]

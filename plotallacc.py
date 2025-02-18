@@ -42,13 +42,13 @@ df8 = get_dataframe("logs_cluster/logs","realcnn-attention-nearest-SST-0.07", "v
 df9 = get_dataframe("logs_cluster/logs","realcnn-attention-nearest-SST-0.08", "version_0")
 df10 = get_dataframe("logs_cluster/logs","realcnn-attention-nearest-SST-0.09", "version_0")
 df11 = get_dataframe("logs_cluster/logs","realcnn-attention-nearest-SST-0.1", "version_0")
-
-df_list = [df6, df7, df8, df9, df10, df11]
+df12 = get_dataframe("logs","real-grouped-classifier-nearest-sst", "version_0")
+df_list = [df6, df7, df8, df9, df10, df11, df12]
 number_waveforms = 8
 SNR = [i for i in range(-14, -2, 2)]
 waveform_list = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4']
 #label_list = ["Bilinear", "Nearest", "Lanczos2", "Lanczos3", "Bicubic"]
-label_list = ["Sigma - 0.05", "Sigma - 0.06", "Sigma - 0.07", "Sigma - 0.08", "Sigma - 0.09", "Sigma - 0.1"]
+label_list = ["Sigma - 0.05", "Sigma - 0.06", "Sigma - 0.07", "Sigma - 0.08", "Sigma - 0.09", "Sigma - 0.1", "P1-P4-group"]
 plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list)
 plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)
 
