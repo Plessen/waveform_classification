@@ -5,6 +5,7 @@ from vit_pytorch import ViT
 import matplotlib.pyplot as plt
 from vit_pytorch.cct import CCT
 from vit_pytorch.cvt import CvT
+from.realcbam import CBAM
 
 class RealConvNet(nn.Module):
     
@@ -65,6 +66,36 @@ class RealConvNetAttention(nn.Module):
         x = nn.functional.log_softmax(x, dim=1)
         return x
 
+class RealConvNetCBAM(nn.Module):
+    def __init__(self, number_waveforms):
+        super(RealConvNetCBAM, self).__init__()
+        self.layers = nn.Sequential(
+            nn.Conv2d(2, 8, (3, 3), padding="same"),
+            nn.BatchNorm2d(8),
+            nn.ELU(),
+            CBAM(8, 2),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(8, 16, (3, 3), padding="same"),
+            nn.BatchNorm2d(16),
+            nn.ELU(),
+            CBAM(16, 2),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(16, 32, (3, 3), padding="same"),
+            nn.BatchNorm2d(32),
+            nn.ELU(),
+            CBAM(32, 2),
+            nn.AvgPool2d(2, 2),
+            nn.Flatten(),
+            nn.Dropout(0.5),
+            nn.Linear(32*16*16, int(128 *  number_waveforms  /  8)),
+            nn.ELU(),
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
+        )
+    def forward(self, x):
+        x = self.layers(x)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x
+  
 class RealConvNetAttentionGrouped(nn.Module):
     def __init__(self):
         super(RealConvNetAttentionGrouped, self).__init__()
@@ -207,6 +238,7 @@ class RealCCT(nn.Module):
             num_layers = 6,          # Shallow depth with efficient attention
             num_heads = 4,           # Fewer attention heads
             mlp_ratio = 2,           # Narrower MLP expansion
+            positional_embedding = 'learnable'
         )
     
     def forward(self, x):
