@@ -179,7 +179,7 @@ class RealViT(nn.Module):
     def __init__(self, number_waveforms):
         super(RealViT, self).__init__()
         self.model = ViT(image_size=128, channels=2, patch_size=16, num_classes=number_waveforms, 
-                         dim=128, depth=6, heads=12, mlp_dim=128, dropout=0.3)
+                         dim=128, depth=2, heads=4, mlp_dim=128, dropout=0)
     
     def forward(self, x):
         x = self.model(x)
@@ -225,20 +225,20 @@ class RealCCT(nn.Module):
     def __init__(self, number_waveforms):
         super(RealCCT, self).__init__()
         self.model = CCT(
-            img_size = (128, 128),   # Input shape matches radar I/Q components
+            img_size = (128, 128),
             num_classes = number_waveforms,
             n_input_channels=2,
             embedding_dim = 128,     # Reduced from typical 256/512
-            n_conv_layers = 2,       # Lightweight convolutional tokenization
+            n_conv_layers = 3,       # Lightweight convolutional tokenization
             kernel_size = 3,
             stride = 2,
             padding = 1,
-            pooling_kernel_size = 3,
+            pooling_kernel_size = 2,
             pooling_stride = 2,
             num_layers = 6,          # Shallow depth with efficient attention
             num_heads = 4,           # Fewer attention heads
             mlp_ratio = 2,           # Narrower MLP expansion
-            positional_embedding = 'learnable'
+            positional_embedding = 'sine'
         )
     
     def forward(self, x):
