@@ -66,6 +66,41 @@ class RealConvNetAttention(nn.Module):
         x = nn.functional.log_softmax(x, dim=1)
         return x
 
+class RealConvNetAttentionCenterLoss(nn.Module):
+    def __init__(self, number_waveforms):
+        super(RealConvNetAttentionCenterLoss, self).__init__()
+        self.number_waveforms = number_waveforms
+        self.features = nn.Sequential(
+            nn.Conv2d(2, 8, (3, 3), padding="same"),
+            nn.BatchNorm2d(8),
+            nn.ELU(),
+            ECA(8),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(8, 16, (3, 3), padding="same"),
+            nn.BatchNorm2d(16),
+            nn.ELU(),
+            ECA(16),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(16, 32, (3, 3), padding="same"),
+            nn.BatchNorm2d(32),
+            nn.ELU(),
+            ECA(32),
+            nn.AvgPool2d(2, 2),
+            nn.Flatten()
+        )
+        
+        self.classifier = nn.Sequential(      
+            nn.Dropout(0.5),
+            nn.Linear(32*16*16, int(128 *  number_waveforms  /  8)),
+            nn.ELU(),
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
+        )
+    def forward(self, x):
+        features = self.features(x)
+        x = self.classifier(features)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x, features
+    
 class RealConvNetCBAM(nn.Module):
     def __init__(self, number_waveforms):
         super(RealConvNetCBAM, self).__init__()
@@ -179,7 +214,7 @@ class RealViT(nn.Module):
     def __init__(self, number_waveforms):
         super(RealViT, self).__init__()
         self.model = ViT(image_size=128, channels=2, patch_size=16, num_classes=number_waveforms, 
-                         dim=128, depth=2, heads=4, mlp_dim=128, dropout=0)
+                         dim=128, depth=2, heads=4, mlp_dim=128, dropout=0.3)
     
     def forward(self, x):
         x = self.model(x)
@@ -228,17 +263,18 @@ class RealCCT(nn.Module):
             img_size = (128, 128),
             num_classes = number_waveforms,
             n_input_channels=2,
-            embedding_dim = 128,     # Reduced from typical 256/512
-            n_conv_layers = 3,       # Lightweight convolutional tokenization
+            embedding_dim = 128,    
+            n_conv_layers = 3,  
             kernel_size = 3,
             stride = 2,
             padding = 1,
             pooling_kernel_size = 2,
             pooling_stride = 2,
-            num_layers = 6,          # Shallow depth with efficient attention
-            num_heads = 4,           # Fewer attention heads
-            mlp_ratio = 2,           # Narrower MLP expansion
-            positional_embedding = 'sine'
+            num_layers = 4,        
+            num_heads = 4,           
+            mlp_ratio = 2,   
+            positional_embedding = 'learnable',
+            droupout_rate = 0.3
         )
     
     def forward(self, x):

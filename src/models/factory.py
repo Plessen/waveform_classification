@@ -1,6 +1,6 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCCT, RealCvT,RealConvNetCBAM
+from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCCT, RealCvT,RealConvNetCBAM, RealConvNetAttentionCenterLoss
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
-from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped
+from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped, BaseLitModelCenterLoss
 from ..data.datamodules import SignalDataModule
 from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
 
@@ -41,6 +41,12 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNetAttention,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
+        "realcnn-attention-centerloss": {
+            "dataset_class": SignalDatasetReal,
+            "lit_model_class": BaseLitModelCenterLoss,
+            "model_class": RealConvNetAttentionCenterLoss,
             "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-cbam": {
