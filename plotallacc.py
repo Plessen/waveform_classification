@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
+    
 def plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list):
     
     rows = number_waveforms // 2 if number_waveforms % 2 == 0 else number_waveforms // 2 + 1

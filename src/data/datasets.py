@@ -68,3 +68,59 @@ class SignalDatasetReal(Dataset):
     def __del__(self):
         if self.file:
             self.file.close()
+
+class SignalDatasetCWD(Dataset):
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.file = None  
+        
+        with h5py.File(self.file_path, 'r') as file:
+            self.total_size = file['/noisy_images'].shape[0]
+            self.class_indices = np.argmax(np.array(file['/labels']), axis=1)
+            
+    def __len__(self):
+        return self.total_size
+
+    def __getitem__(self, idx):        
+        if self.file is None:
+            self.file = h5py.File(self.file_path, 'r')
+
+        
+        noisy_image = torch.tensor(self.file['/noisy_images'][idx], dtype=torch.float32).unsqueeze(0)
+        label = torch.argmax(torch.tensor(self.file['/labels'][idx], dtype=torch.float32), dim=0)
+            
+        return noisy_image, label
+
+    def __del__(self):
+        if self.file:
+            self.file.close()
+
+class SignalDatasetCombined(Dataset):
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.file = None  
+        
+        with h5py.File(self.file_path, 'r') as file:
+            self.total_size = file['/clean_images/images_real'].shape[0]
+            self.class_indices = np.argmax(np.array(file['/labels']), axis=1)
+            
+    def __len__(self):
+        return self.total_size
+
+    def __getitem__(self, idx):        
+        if self.file is None:
+            self.file = h5py.File(self.file_path, 'r')
+            
+        vsst_real = torch.tensor(self.file['/vsst_images/images_real'][idx], dtype=torch.float32).unsqueeze(0)
+        vsst_imag = torch.tensor(self.file['/vsst_images/images_imag'][idx], dtype=torch.float32).unsqueeze(0)
+        vsst_image = torch.cat((vsst_real, vsst_imag), dim=0)
+        
+        noisy_image = torch.tensor(self.file['/cwd_images'][idx], dtype=torch.float32).unsqueeze(0)
+        
+        label = torch.argmax(torch.tensor(self.file['/labels'][idx], dtype=torch.float32), dim=0)
+            
+        return vsst_image, noisy_image, label
+
+    def __del__(self):
+        if self.file:
+            self.file.close()

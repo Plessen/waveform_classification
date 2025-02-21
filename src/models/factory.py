@@ -1,8 +1,8 @@
-from .nn_modules.realcnn import RealConvNet, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCCT, RealCvT,RealConvNetCBAM, RealConvNetAttentionCenterLoss
+from .nn_modules.realcnn import RealConvNet, RealCWDVSST, RealConvNetAttentionCWD, RealConvNetAttention, RealConvNetDenoise, RealDenoisingAutoencoder, RealViT, RealConvNetAttentionGrouped, RealEnsembleClassifier, RealCCT, RealCvT,RealConvNetCBAM, RealConvNetAttentionCenterLoss
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
-from .lit_modules import BaseLitModel, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped, BaseLitModelCenterLoss
+from .lit_modules import BaseLitModel,BaseLitModelCWDVSST, BaseLitModelCWD, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped, BaseLitModelCenterLoss
 from ..data.datamodules import SignalDataModule
-from ..data.datasets import SignalDatasetComplex, SignalDatasetReal
+from ..data.datasets import SignalDatasetComplex, SignalDatasetReal, SignalDatasetCWD, SignalDatasetCombined
 
 def freeze_model(model):
     for param in model.parameters():
@@ -41,6 +41,18 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetReal,
             "lit_model_class": BaseLitModel,
             "model_class": RealConvNetAttention,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
+        "realcnn-attention-cwd": {
+            "dataset_class": SignalDatasetCWD,
+            "lit_model_class": BaseLitModelCWD,
+            "model_class": RealConvNetAttentionCWD,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
+        "realcnn-attention-cwd-vsst": {
+            "dataset_class": SignalDatasetCombined,
+            "lit_model_class": BaseLitModelCWDVSST,
+            "model_class": RealCWDVSST,
             "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-attention-centerloss": {
@@ -146,7 +158,14 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
         
         cfg["model_args"]["model_classifier"] = pretrained_models[0]
         cfg["model_args"]["model_group"] = pretrained_models[1]
-                
+    
+    if model_name == "realcnn-attention-cwd-vsst":
+        if len(pretrained_models) != 2:
+            raise ValueError("Two pretrained models are required for realcnn-attention-cwd-vsst")
+        
+        cfg["model_args"]["model_vsst"] = pretrained_models[0]
+        cfg["model_args"]["model_cwd"] = pretrained_models[1]
+                 
     # Instantiate model
     model_instance = cfg["model_class"](**cfg["model_args"])
     if len(checkpoint_path_list) > 0 and len(pretrained_models) == 0:

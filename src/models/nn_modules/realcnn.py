@@ -66,6 +66,36 @@ class RealConvNetAttention(nn.Module):
         x = nn.functional.log_softmax(x, dim=1)
         return x
 
+class RealConvNetAttentionCWD(nn.Module):
+    def __init__(self, number_waveforms):
+        super(RealConvNetAttentionCWD, self).__init__()
+        self.layers = nn.Sequential(
+            nn.Conv2d(1, 10, (3, 3), padding="same"),
+            nn.BatchNorm2d(10),
+            nn.ELU(),
+            ECA(10),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(10, 16, (3, 3), padding="same"),
+            nn.BatchNorm2d(16),
+            nn.ELU(),
+            ECA(16),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(16, 32, (3, 3), padding="same"),
+            nn.BatchNorm2d(32),
+            nn.ELU(),
+            ECA(32),
+            nn.AvgPool2d(2, 2),
+            nn.Flatten(),
+            nn.Dropout(0.5),
+            nn.Linear(32*16*16, int(128 *  number_waveforms  /  8)),
+            nn.ELU(),
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
+        )
+    def forward(self, x):
+        x = self.layers(x)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x
+
 class RealConvNetAttentionCenterLoss(nn.Module):
     def __init__(self, number_waveforms):
         super(RealConvNetAttentionCenterLoss, self).__init__()
@@ -281,7 +311,30 @@ class RealCCT(nn.Module):
         x = self.model(x)
         x = nn.functional.log_softmax(x, dim=1)
         return x
-   
+
+class RealCWDVSST(nn.Module):
+    def __init__(self, model_vsst, model_cwd, number_waveforms):
+        super(RealCWDVSST, self).__init__()
+        self.model_vsst = model_vsst
+        self.model_cwd = model_cwd
+        
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(2 * 32*16*16, int(128 *  number_waveforms  /  8)), 
+            nn.ELU(),
+            nn.Linear(int(128 *  number_waveforms  /  8), number_waveforms)
+        )
+    def forward(self, x):
+        vsst_image, cwd_image = x
+        vsst_features = self.model_vsst.layers[:-5](vsst_image)
+        cwd_features = self.model_cwd[:-5](cwd_image)
+        
+        features = torch.cat((vsst_features, cwd_features), dim=1)
+        x = self.classifier(features)
+        x = nn.functional.log_softmax(x, dim=1)
+        return x
+        
+    
 class RealEnsembleClassifier(nn.Module):
     
     def __init__(self, model_classifier, model_group):
