@@ -9,7 +9,7 @@ function resized_images = transform_data(signal, noisy_signal, N, image_size, re
     % Pad signals to the target length N
     noisy_signal = [noisy_signal, zeros(size(noisy_signal, 1), N - length(noisy_signal))];
     signal = [signal, zeros(size(signal, 1), N - length(signal))];
-
+    
     % Compute SST and VSST for noisy signal
     [~, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
     SST_noisy = SST_noisy(1:N/2, 1:original_size);
