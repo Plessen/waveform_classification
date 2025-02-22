@@ -101,7 +101,7 @@ class SignalDatasetCombined(Dataset):
         self.file = None  
         
         with h5py.File(self.file_path, 'r') as file:
-            self.total_size = file['/clean_images/images_real'].shape[0]
+            self.total_size = file['/vsst_images/images_real'].shape[0]
             self.class_indices = np.argmax(np.array(file['/labels']), axis=1)
             
     def __len__(self):

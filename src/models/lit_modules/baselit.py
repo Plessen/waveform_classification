@@ -379,7 +379,7 @@ class BaseLitModelGrouped(L.LightningModule):
     def configure_optimizers(self):
         return self.optimizer
 
-class BaseLitModelCWDVSST(L.LightningDataModule):
+class BaseLitModelCWDVSST(L.LightningModule):
     def __init__(self, model, lr = 0.001, **kwargs):
         super().__init__()
         self.model = model
@@ -393,14 +393,14 @@ class BaseLitModelCWDVSST(L.LightningDataModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        images, label = batch
+        *images, label = batch
         output = self(images)
         loss = self.criterion(output, label)
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        images, label = batch
+        *images, label = batch
         output = self.model(images)
         loss = self.criterion(output, label)
         
@@ -411,7 +411,7 @@ class BaseLitModelCWDVSST(L.LightningDataModule):
         return loss
     
     def test_step(self, batch, batch_idx):
-        images, label = batch
+        *images, label = batch
         output = self.model(images)
         loss = self.criterion(output, label)
         acc = (output.argmax(dim = 1) == label).float().mean()

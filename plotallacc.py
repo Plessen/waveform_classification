@@ -55,15 +55,17 @@ plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)
 df = get_dataframe("logs_cluster", "realcnn-attention-nearest-SST-sigma-0.04-all-waveforms", "version_0")
 df1 = get_dataframe("logs_cluster","realcnn-attention-nearest-SST-sigma-0.05-all-waveforms", "version_0")
 df2 = get_dataframe("logs_cluster","realcnn-attention-nearest-SST-sigma-0.06-all-waveforms", "version_0")
-#df3 = get_dataframe("logs_cluster","realcnn-attention-nearest-SST-sigma-0.07-all-waveforms", "version_1")
-#df4 = get_dataframe("logs_cluster","realcnn-attention-nearest-SST-sigma-0.08-all-waveforms", "version_1")
-#df5 = get_dataframe("logs_cluster","realcnn-attention-nearest-SST-sigma-0.09-all-waveforms", "version_1")
 
-df_list = [df, df1, df2] #, df3, df4, df5]
+df3 = get_dataframe("logs_cluster","realcnn-attention-bilinear-SST-sigma-0.05-all-waveforms", "version_0")
+df4 = get_dataframe("logs_cluster","realcnn-attention-bicubic-SST-sigma-0.05-all-waveforms", "version_0")
+df5 = get_dataframe("logs_cluster","realcnn-attention-lanczos2-SST-sigma-0.05-all-waveforms", "version_0")
+df5 = get_dataframe("logs_cluster","realcnn-attention-lanczos3-SST-sigma-0.05-all-waveforms", "version_0")
+
+df_list = [df, df1, df2, df3, df4, df5]
 number_waveforms = 12
 SNR = [i for i in range(-14, -2, 2)]
 waveform_list = ['LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4']
-label_list = ["Sigma - 0.04", "Sigma - 0.05", "Sigma - 0.06", "Sigma - 0.07", "Sigma - 0.08", "Sigma - 0.09"]
+label_list = ["Sigma - 0.04", "Sigma - 0.05", "Sigma - 0.06", "Bilinear", "Bicubic", "Lanczos2", "Lanczos3"]
 plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list)
 plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)
 

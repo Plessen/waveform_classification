@@ -326,10 +326,11 @@ class RealCWDVSST(nn.Module):
         )
     def forward(self, x):
         vsst_image, cwd_image = x
-        vsst_features = self.model_vsst.layers[:-5](vsst_image)
-        cwd_features = self.model_cwd[:-5](cwd_image)
+        vsst_features = self.model_vsst.layers[:-4](vsst_image)
+        cwd_features = self.model_cwd.layers[:-4](cwd_image)
         
         features = torch.cat((vsst_features, cwd_features), dim=1)
+        
         x = self.classifier(features)
         x = nn.functional.log_softmax(x, dim=1)
         return x
