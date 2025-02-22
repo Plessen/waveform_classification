@@ -2,7 +2,7 @@ from .nn_modules.realcnn import RealConvNet, RealCWDVSST, RealConvNetAttentionCW
 from .nn_modules.complexcnn import ComplexConvNet, ComplexConvNetAttention, ComplexConvNetDenoise, ComplexDenoisingAutoencoder, ComplexDenoisingAutoencoderGrouped
 from .lit_modules import BaseLitModel,BaseLitModelCWDVSST, BaseLitModelCWD, BaseLitModelAutoencoder, BaseLitModelUsingAutoencoder, BaseLitModelGrouped, BaseLitModelCenterLoss
 from ..data.datamodules import SignalDataModule
-from ..data.datasets import SignalDatasetComplex, SignalDatasetReal, SignalDatasetCWD, SignalDatasetCombined
+from ..data.datasets import SignalDatasetComplex, SignalDatasetReal, SignalDatasetCWD, SignalDatasetCombined, SignalDatasetWSST
 
 def freeze_model(model):
     for param in model.parameters():
@@ -47,6 +47,12 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "dataset_class": SignalDatasetCWD,
             "lit_model_class": BaseLitModelCWD,
             "model_class": RealConvNetAttentionCWD,
+            "model_args": {"number_waveforms": number_waveforms}
+        },
+        "realcnn-attention-wsst": {
+            "dataset_class": SignalDatasetWSST,
+            "lit_model_class": BaseLitModelCWD,
+            "model_class": RealConvNetAttention,
             "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-attention-cwd-vsst": {

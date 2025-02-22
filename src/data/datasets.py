@@ -124,3 +124,31 @@ class SignalDatasetCombined(Dataset):
     def __del__(self):
         if self.file:
             self.file.close()
+
+class SignalDatasetWSST(Dataset):
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.file = None  
+        
+        with h5py.File(self.file_path, 'r') as file:
+            self.total_size = file['/noisy_images/images_real'].shape[0]
+            self.class_indices = np.argmax(np.array(file['/labels']), axis=1)
+            
+    def __len__(self):
+        return self.total_size
+
+    def __getitem__(self, idx):        
+        if self.file is None:
+            self.file = h5py.File(self.file_path, 'r')
+        
+        noisy_real = torch.tensor(self.file['/noisy_images/images_real'][idx], dtype=torch.float32).unsqueeze(0)
+        noisy_imag = torch.tensor(self.file['/noisy_images/images_imag'][idx], dtype=torch.float32).unsqueeze(0)
+        noisy_image = torch.cat((noisy_real, noisy_imag), dim=0)
+        
+        label = torch.argmax(torch.tensor(self.file['/labels'][idx], dtype=torch.float32), dim=0)
+            
+        return noisy_image, label
+
+    def __del__(self):
+        if self.file:
+            self.file.close()

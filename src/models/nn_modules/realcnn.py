@@ -335,7 +335,6 @@ class RealCWDVSST(nn.Module):
         x = nn.functional.log_softmax(x, dim=1)
         return x
         
-    
 class RealEnsembleClassifier(nn.Module):
     
     def __init__(self, model_classifier, model_group):
