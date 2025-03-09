@@ -11,10 +11,13 @@ function resized_images = transform_data(signal, noisy_signal, N, image_size, re
     signal = [signal, zeros(size(signal, 1), N - length(signal))];
     
     if transform == "kaiser"
-        [SST_clean,~,~] = fsst(signal, 100e6,1024,'yaxis');
-        [SST_noisy,~,~] = fsst(noisy_signal, 100e6,1024,'yaxis');
-        SST_clean = SST_clean(1:1024, 1:original_size);
-        SST_noisy = SST_noisy(1:1024, 1:original_size);
+        padding = zeros((1024 - 256) / 2, 1);
+        window = [padding; kaiser(256,10); padding];
+
+        [SST_clean,~,~] = fsst(signal, 100e6, window,'yaxis');
+        [SST_noisy,~,~] = fsst(noisy_signal,100e6, window,'yaxis');
+        SST_clean = SST_clean(512:1024, 1:original_size);
+        SST_noisy = SST_noisy(512:1024, 1:original_size);
         resized_images.transform_resized = imresize(SST_clean, [image_size, image_size], resize_method, "Antialiasing", false);
         resized_images.transform_noisy_resized = imresize(SST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
         return;    
