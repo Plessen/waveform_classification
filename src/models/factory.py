@@ -38,8 +38,8 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-attention": {
-            "dataset_class": SignalDatasetReal,
-            "lit_model_class": BaseLitModel,
+            "dataset_class": SignalDatasetWSST,
+            "lit_model_class": BaseLitModelCWD,
             "model_class": RealConvNetAttention,
             "model_args": {"number_waveforms": number_waveforms}
         },

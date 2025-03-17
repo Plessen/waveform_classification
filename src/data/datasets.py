@@ -75,7 +75,7 @@ class SignalDatasetCWD(Dataset):
         self.file = None  
         
         with h5py.File(self.file_path, 'r') as file:
-            self.total_size = file['/noisy_images'].shape[0]
+            self.total_size = file['/noisy_images/images_real'].shape[0]
             self.class_indices = np.argmax(np.array(file['/labels']), axis=1)
             
     def __len__(self):
@@ -86,7 +86,7 @@ class SignalDatasetCWD(Dataset):
             self.file = h5py.File(self.file_path, 'r')
 
         
-        noisy_image = torch.tensor(self.file['/noisy_images'][idx], dtype=torch.float32).unsqueeze(0)
+        noisy_image = torch.tensor(self.file['/noisy_images/images_real'][idx], dtype=torch.float32).unsqueeze(0)
         label = torch.argmax(torch.tensor(self.file['/labels'][idx], dtype=torch.float32), dim=0)
             
         return noisy_image, label
