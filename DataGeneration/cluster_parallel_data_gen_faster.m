@@ -189,7 +189,8 @@ function [] = cluster_parallel_data_gen_faster(signals_per_SNR, resize_method, t
                     N=round(N(randperm(signals_per_SNR)));
                     Nps = 2;
                     for idx = 1:signals_per_SNR
-                        wav = type_T1(fs, A, fc(idx),Nps,Ng(randi(3)));
+                        wav = testeT1(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
+                        %wav = type_T1(fs, A, fc(idx),Nps,Ng(randi(3)));
                         resized_images = transform_data_faster(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma, fs);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
@@ -206,7 +207,8 @@ function [] = cluster_parallel_data_gen_faster(signals_per_SNR, resize_method, t
                     N = linspace(512,1024,signals_per_SNR);
                     N=round(N(randperm(signals_per_SNR)));
                     for idx = 1:signals_per_SNR
-                        wav = type_T2(fs, A, fc(idx),Nps,Ng(randi(3)));
+                        wav = testeT2(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
+                        %wav = type_T2(fs, A, fc(idx),Nps,Ng(randi(3)));
                         resized_images = transform_data_faster(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma, fs);         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
