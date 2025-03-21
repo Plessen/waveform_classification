@@ -10,6 +10,7 @@ for jj = 1:Ng
     % Find indices corresponding to segment jj
     idx = (t >= (jj-1)*T_seg) & (t < jj*T_seg);
     t_seg = t(idx) - (jj-1)*T_seg;
+    t_seg = t_seg - t_seg(1);
     phi_quant = mod(2*pi/Nps*floor((Ng*t_seg-jj*pw)*jj*Nps/pw),2*pi);
     phi(idx) = phi_quant;
 end
