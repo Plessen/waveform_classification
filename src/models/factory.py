@@ -68,7 +68,7 @@ def model_factory(model_name, data_paths, batch_sizes, num_workers, val_split, l
             "model_args": {"number_waveforms": number_waveforms}
         },
         "realcnn-attention-centerloss": {
-            "dataset_class": SignalDatasetReal,
+            "dataset_class": SignalDatasetWSST,
             "lit_model_class": BaseLitModelCenterLoss,
             "model_class": RealConvNetAttentionCenterLoss,
             "model_args": {"number_waveforms": number_waveforms}

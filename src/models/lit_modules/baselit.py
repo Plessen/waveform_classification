@@ -89,7 +89,7 @@ class BaseLitModelCenterLoss(L.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        clean_image, noisy_image, label = batch
+        noisy_image, label = batch
         output, features = self(noisy_image)
         model_opt, center_opt = self.optimizers()
         
@@ -107,7 +107,7 @@ class BaseLitModelCenterLoss(L.LightningModule):
         #return loss
     
     def validation_step(self, batch, batch_idx):
-        clean_image, noisy_image, label = batch
+        noisy_image, label = batch
         output, features = self(noisy_image)
         loss = self.criterion(output, label)
         
@@ -118,7 +118,7 @@ class BaseLitModelCenterLoss(L.LightningModule):
         return loss
     
     def test_step(self, batch, batch_idx):
-        clean_image, noisy_image, label = batch
+        noisy_image, label = batch
         output, features = self(noisy_image)
         loss = self.criterion(output, label)
         acc = (output.argmax(dim = 1) == label).float().mean()
