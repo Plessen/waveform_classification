@@ -6,15 +6,17 @@ function resized_images = transform_data_faster(signal, SNR, N, image_size, resi
 
     noisy_signal = [noisy_signal, zeros(size(noisy_signal, 1), N - length(noisy_signal))];
 
-    if transform == "SST" || transform == "VSST"
-        [~, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
+    if transform == "SST" || transform == "VSST" || transform == "STFT"
+        [STFT, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
         SST_noisy = SST_noisy(1:N/2, 1:original_size);
         VSST_noisy = VSST_noisy(1:N/2, 1:original_size);
 
         if transform == "SST"
             resized_images.transform_resized = imresize(SST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
-        else
+        elseif transform == "VSST"
             resized_images.transform_resized = imresize(VSST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
+        else
+            resized_images.transform_resized = imresize(STFT, [image_size, image_size], resize_method, "Antialiasing", false);
         end
 
     elseif transform == "kaiser"
