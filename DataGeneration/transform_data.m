@@ -23,7 +23,7 @@ function resized_images = transform_data(signal, noisy_signal, N, image_size, re
         return;    
     else
         % Compute SST and VSST for noisy signal
-        [~, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, real_noise_std / sqrt(2));
+        [~, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
         SST_noisy = SST_noisy(1:N/2, 1:original_size);
         VSST_noisy = VSST_noisy(1:N/2, 1:original_size);
 
