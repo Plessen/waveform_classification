@@ -11,7 +11,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, 
     %image_size = 128;
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
-    SNR = -14:4:22;
+    SNR = -14:2:20;
     pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
 
