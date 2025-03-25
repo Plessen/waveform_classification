@@ -25,7 +25,7 @@ function plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, 
     end
     ax = gca;
     ax.FontSize = 34; 
-    index = -12 <= SNR & SNR <= -10;
+    index = -14 <= SNR & SNR <= -12;
     axes('Position', [0.4 0.2 0.4 0.4]);
     box on;
     hold on;
