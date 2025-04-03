@@ -1,4 +1,4 @@
-function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, resize_method, transform, seed, train, sigma, image_size_row, image_size_col, error)
+function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, resize_method, transform, seed, train, sigma, image_size_row, image_size_col)
     
     pool = initParPool();
     
@@ -15,11 +15,6 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, 
     %pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
     
-    if error
-        delete(pool);
-        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size_row, image_size_col, output_dir, sigma);
-    end
-
     if train
         prefix = 'input_train_';
     else
