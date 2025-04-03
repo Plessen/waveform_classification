@@ -1,6 +1,6 @@
-function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, resize_method, transform, num_workers, seed, train, sigma, image_size_row, image_size_col)
+function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, resize_method, transform, seed, train, sigma, image_size_row, image_size_col, error)
     
-    %pool = initParPool();
+    pool = initParPool();
     
     output_dir = "./data";
     assert(exist(output_dir, "dir"), "The output directory does not exist");
@@ -12,9 +12,12 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, 
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
     SNR = -14:2:20;
-    pool = parpool(num_workers);
+    %pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
-
+    
+    if error
+        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size_row, image_size_col, output_dir, sigma);
+    end
 
     if train
         prefix = 'input_train_';
