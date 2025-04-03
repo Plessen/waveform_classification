@@ -16,6 +16,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image(signals_per_SNR, 
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
     
     if error
+        delete(pool);
         combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size_row, image_size_col, output_dir, sigma);
     end
 
