@@ -1,27 +1,8 @@
 function resized_images = transform_data_fading(signal, SNR, N, image_size, resize_method, transform, sigma,... 
-    numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)
+    numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas)
 
-    PathNum = randi(numPaths_range,1,1);
-    pathDelayConstant = randi(pathDelay_range,1,1);
-    avgPathGainsConstant = randi(pathGain_range,1,1);
     
-    pathDelays = [0:PathNum-1].*pathDelayConstant*1e-9;
-    avgPathGains = -1*[0:PathNum-1].*avgPathGainsConstant;
-    K = randi(Kfactor_range,1,1);
-    fdopMax = randi(dopplerRange,1,1);
-    
-    ricianChan = comm.RicianChannel(...
-        'SampleRate',fs,...
-        'PathDelays',pathDelays,...
-        'AveragePathGains',avgPathGains,...
-        'KFactor',K,...
-        'MaximumDopplerShift',fdopMax, ...
-        'ChannelFiltering', true);
-
-
-    fadingOutput = ricianChan(signal.');
-    output = awgn(fadingOutput.', SNR, 'measured');
-
+    output = fading_strategy(signal, SNR, strategy, number_antennas, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs);
     
     % Ensure signal and noisy_signal have the same length and pad if necessary
     output = signal(1:min(N, length(output)));

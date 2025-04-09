@@ -1,29 +1,23 @@
-function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, transform, num_workers, seed, train, sigma, doppler)
+function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, transform, seed, train, sigma, strategy, number_antennas)
     
-    %pool = initParPool();
+    pool = initParPool();
     
     output_dir = "./data";
     assert(exist(output_dir, "dir"), "The output directory does not exist");
     addpath("./Waveforms");
     addpath("./Transforms");
     addpath("./data");
-    fs = 3.84e6;
+    fs = 100e6;
     image_size = 128;
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
-    SNR = -12:2:-2;
+    SNR = -16:2:20;
     numPaths_range = [1 3];
     pathDelay_range = [200 500];
     pathGain_range = [4 8];
-    Kfactor_range = [5 15];
+    Kfactor_range = [1 10];
 
-    if doppler
-        dopplerRange = [1000 3000];
-    else
-        dopplerRange = [0 0];
-    end
-
-    pool = parpool(num_workers);
+    %pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
 
 
@@ -34,7 +28,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
     end
 
     for snr_index = 1:length(SNR)
-         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_fading.h5']);
+         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_' num2str(number_antennas) '_' strategy '_fading.h5']);
          h5create(prefix_clean, '/noisy_images/images_real', [image_size, image_size, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_imag', [image_size, image_size, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/labels', [length(waveforms), total_signals_per_SNR]);
@@ -45,7 +39,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
         s = RandStream.create('mt19937ar','Seed', seed + snr_index);
         RandStream.setGlobalStream(s);
 
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_fading.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_' num2str(number_antennas) '_' strategy '_fading.h5']);
         start_index = 1;
         input_batch = complex(zeros(image_size, image_size, signals_per_SNR));
         
@@ -71,7 +65,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_LFM(N(idx),fs,A,fc(idx),B(idx),sweepDirections{randi(2)});
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);       
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -90,7 +84,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                         NumHop = getCostasHopingSequence(Lc(randi(4)));
                         wav = type_Costas(N(idx), fs, A, fcmin(idx), NumHop);
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                     end
                     write_batch_to_h5(prefix_clean, input_batch, output_data_batch, start_index, image_size, signals_per_SNR)
@@ -113,7 +107,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                         end
                         wav = type_Barker(Ncc(randi(length(Ncc))), fs, A, fc(idx), phaseCode);
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -129,7 +123,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_Frank(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -145,7 +139,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_P1(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -161,7 +155,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_P2(Ncc(randi(3)), fs, A, fc(idx), M(randi(2)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end            
@@ -177,7 +171,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_P3(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -193,7 +187,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_P4(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -208,9 +202,9 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     N=round(N(randperm(signals_per_SNR)));
                     Nps = 2;
                     for idx = 1:signals_per_SNR
-                        wav = type_T1(fs, A, fc(idx),Nps,Ng(randi(3)));
+                        wav = testeT1(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -226,9 +220,9 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     N = linspace(512,1024,signals_per_SNR);
                     N=round(N(randperm(signals_per_SNR)));
                     for idx = 1:signals_per_SNR
-                        wav = type_T2(fs, A, fc(idx),Nps,Ng(randi(3)));
+                        wav = testeT2(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -247,7 +241,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_T3(N(idx), fs, A, fc(idx), Nps,B(idx));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -266,7 +260,7 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     for idx = 1:signals_per_SNR
                         wav = type_T4(N(idx), fs, A, fc(idx), Nps,B(idx));
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, dopplerRange, fs)          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -280,9 +274,9 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
     if train
         disp("Starting data shuffling");
         %combine_h5_files_shuffled(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir);
-        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma);
+        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma, strategy, number_antennas);
     else
-        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma);
+        combine_h5_files(resize_method, transform, train, length(SNR), signals_per_SNR, length(waveforms), image_size, output_dir, sigma, strategy, number_antennas);
     end
 end
 
@@ -294,7 +288,7 @@ function write_batch_to_h5(prefix_clean, input_batch, output_data_batch, start, 
     h5write(prefix_clean, '/labels', output_data_batch, [1 start], [size(output_data_batch, 1) signals_per_SNR]);
 end
 
-function combine_h5_files(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir, sigma)
+function combine_h5_files(resize_method, transform, train, snr_length, signals_per_SNR, num_waveforms, image_size, output_dir, sigma, strategy, number_antennas)
 
     if train
         prefix = 'input_train_';
@@ -304,7 +298,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     total_signals = snr_length * signals_per_SNR * num_waveforms;
   
-    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_fading.h5']);
+    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_' num2str(number_antennas) '_' strategy '_fading.h5']);
 
     h5create(combined_clean_file, '/noisy_images/images_real', [image_size, image_size, total_signals], 'Datatype', 'double');
     h5create(combined_clean_file, '/noisy_images/images_imag', [image_size, image_size, total_signals], 'Datatype', 'double');
@@ -312,7 +306,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     current_index = 1;
     for snr_index = 1:snr_length
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_fading.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_' num2str(number_antennas) '_' strategy '_fading.h5']);
 
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
