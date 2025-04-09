@@ -22,7 +22,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
     end
 
     for snr_index = 1:length(SNR)
-         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '.h5']);
+         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
          h5create(prefix_clean, '/noisy_images/images_real', [image_size_col, image_size_row, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_imag', [image_size_col, image_size_row, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/labels', [length(waveforms), total_signals_per_SNR]);
@@ -33,7 +33,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
         s = RandStream.create('mt19937ar','Seed', seed + snr_index);
         RandStream.setGlobalStream(s);
 
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
         start_index = 1;
         input_batch = complex(zeros(image_size_row, image_size_col, signals_per_SNR));
         
@@ -282,7 +282,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     total_signals = snr_length * signals_per_SNR * num_waveforms;
   
-    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '.h5']);
+    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
 
     h5create(combined_clean_file, '/noisy_images/images_real', [image_size_col, image_size_row, total_signals], 'Datatype', 'double');
     h5create(combined_clean_file, '/noisy_images/images_imag', [image_size_col, image_size_row, total_signals], 'Datatype', 'double');
@@ -290,7 +290,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     current_index = 1;
     for snr_index = 1:snr_length
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
 
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
