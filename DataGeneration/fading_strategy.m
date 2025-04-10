@@ -51,7 +51,7 @@ function [noisy_signal] = fading_strategy(signal, SNR, strategy, Nr, numPaths_ra
         "NormalizeChannelOutputs",false);
 
         fadingOutput = mimoChan(signal.');
-        received_signal = awgn(fadingOutput.', SNR, 'measured');
+        received_signal = awgn(fadingOutput, SNR, 'measured');
         aligned_signals = zeros(N, Nr);
         aligned_signals(:, 1) = received_signal(:, 1);
         for i = 2:Nr
