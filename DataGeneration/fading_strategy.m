@@ -1,4 +1,4 @@
-function [noisy_signal] = fading_strategy(signal, SNR, strategy, Nr, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs)
+function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs)
     N = length(signal); % Length of the input signal
     if strategy == "cooperative"
         ricianChan = cell(1, Nr);
@@ -25,7 +25,7 @@ function [noisy_signal] = fading_strategy(signal, SNR, strategy, Nr, numPaths_ra
         received_signal = zeros(N, Nr);
         for i = 1:Nr
             fadingOutput = ricianChan{i}(signal.');
-            received_signal(:, i) = awgn(fadingOutput.', SNR, 'measured');
+            received_signal(:, i) = awgn(fadingOutput, SNR, 'measured');
         end
         
         aligned_signals = zeros(N, Nr);
@@ -51,7 +51,8 @@ function [noisy_signal] = fading_strategy(signal, SNR, strategy, Nr, numPaths_ra
         "NormalizeChannelOutputs",false);
 
         fadingOutput = mimoChan(signal.');
-        received_signal = awgn(fadingOutput, SNR, 'measured');
+        received_signal = awgn(fadingOutput, SNR, "measured");
+
         aligned_signals = zeros(N, Nr);
         aligned_signals(:, 1) = received_signal(:, 1);
         for i = 2:Nr

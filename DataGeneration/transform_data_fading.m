@@ -5,7 +5,7 @@ function resized_images = transform_data_fading(signal, SNR, N, image_size, resi
     output = fading_strategy(signal, SNR, strategy, number_antennas, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs);
     
     % Ensure signal and noisy_signal have the same length and pad if necessary
-    output = signal(1:min(N, length(output)));
+    output = output(1:min(N, length(output)));
     original_size = length(output);
 
     output = [output, zeros(size(output, 1), N - length(output))];
