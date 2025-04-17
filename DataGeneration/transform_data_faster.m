@@ -22,6 +22,7 @@ function resized_images = transform_data_faster(signal, SNR, N, image_size, resi
             resized_images.transform_resized = imresize(SST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
         else
             [STFT, ~, ~, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
+            STFT = STFT(1:N/2, 1:original_size);
             resized_images.transform_resized = imresize(STFT, [image_size, image_size], resize_method, "Antialiasing", false);
         end
 
