@@ -10,15 +10,23 @@ function resized_images = transform_data_fading(signal, SNR, N, image_size, resi
 
     output = [output, zeros(size(output, 1), N - length(output))];
 
-    if transform == "SST" || transform == "VSST"
-        [~, SST_noisy, VSST_noisy, ~, ~, ~, ~] = sst2_new(output, 1 / sigma^2 / N, N, 0);
-        SST_noisy = SST_noisy(1:N/2, 1:original_size);
-        VSST_noisy = VSST_noisy(1:N/2, 1:original_size);
-
+    if transform == "SST" || transform == "VSST" || transform == "STFT"
+        
         if transform == "SST"
+            n = 1024;
+            t = -0.5:1/n:0.5-1/n;t=t';
+            g =  1/sigma*exp(-pi/sigma^2*t.^2);
+            SST_noisy = fsst(output, fs, g, 'yaxis');
+            SST_noisy = SST_noisy(N/2:N, 1:original_size);
             resized_images.transform_resized = imresize(SST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
-        else
+        elseif transform == "VSST"
+            [~, ~, VSST_noisy, ~, ~, ~, ~] = sst2_new(output, 1 / sigma^2 / N, N, 0);
+            VSST_noisy = VSST_noisy(1:N/2, 1:original_size);
             resized_images.transform_resized = imresize(VSST_noisy, [image_size, image_size], resize_method, "Antialiasing", false);
+        else
+            [STFT, ~, ~, ~, ~, ~, ~] = sst2_new(output, 1 / sigma^2 / N, N, 0);
+            STFT = STFT(1:N/2, 1:original_size);
+            resized_images.transform_resized = imresize(STFT, [image_size, image_size], resize_method, "Antialiasing", false);
         end
 
     elseif transform == "kaiser"

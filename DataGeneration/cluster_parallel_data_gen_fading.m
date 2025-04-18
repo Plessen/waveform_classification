@@ -1,6 +1,6 @@
-function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, transform, seed, train, sigma, strategy, number_antennas)
+function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, transform,num_workers, seed, train, sigma, strategy, number_antennas)
     
-    pool = initParPool();
+    %pool = initParPool();
     
     output_dir = "./data";
     assert(exist(output_dir, "dir"), "The output directory does not exist");
@@ -11,13 +11,13 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
     image_size = 128;
     A = 1;
     waveforms = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
-    SNR = -16:2:20;
+    SNR = -16:2:10;
     numPaths_range = [1 3];
     pathDelay_range = [200 500];
     pathGain_range = [4 8];
     Kfactor_range = [1 10];
 
-    %pool = parpool(num_workers);
+    pool = parpool(num_workers);
     total_signals_per_SNR = signals_per_SNR * length(waveforms);
 
 
