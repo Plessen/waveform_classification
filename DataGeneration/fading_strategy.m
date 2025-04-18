@@ -61,6 +61,7 @@ function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_rang
             aligned_signal = received_signal(:, i) * exp(1i*phi_est);
             aligned_signals(:, i) = aligned_signal;
         end
+
         noisy_signal = sum(aligned_signals, 2);
     else
     end

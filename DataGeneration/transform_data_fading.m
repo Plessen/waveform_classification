@@ -8,8 +8,7 @@ function resized_images = transform_data_fading(signal, SNR, N, image_size, resi
     output = output(1:min(N, length(output)));
     original_size = length(output);
 
-    output = [output, zeros(size(output, 1), N - length(output))];
-
+    output = [output; zeros(N - length(output), 1)];
     if transform == "SST" || transform == "VSST" || transform == "STFT"
         
         if transform == "SST"
