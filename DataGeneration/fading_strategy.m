@@ -1,4 +1,4 @@
-function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs)
+function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, fc)
     N = length(signal); % Length of the input signal
     if strategy == "cooperative"
         ricianChan = cell(1, Nr);
@@ -37,7 +37,7 @@ function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_rang
             aligned_signals(:, i) = aligned_signal;
         end
         noisy_signal = sum(aligned_signals, 2);
-    elseif strategy == "independent"
+    elseif strategy == "independent" || strategy == "correlated"
         PathNum = randi(numPaths_range,1,1);
         pathDelayConstant = randi(pathDelay_range,1,1);
         avgPathGainsConstant = randi(pathGain_range,1,1);
@@ -45,9 +45,14 @@ function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_rang
         pathDelays = [0:PathNum-1].*pathDelayConstant*1e-9;
         avgPathGains = -1*[0:PathNum-1].*avgPathGainsConstant;
         K = randi(Kfactor_range,1,1);
-
+        
+        if strategy == "independent"
+            cov = eye(Nr);
+        else
+            cov = channel_correlation_matrix(Nr, fc, 3e8 / (fs * 0.375) / 2); %%Lambda is the medium lambda of considered carriers
+        end
         mimoChan = comm.MIMOChannel("SampleRate",fs,"FadingDistribution","Rician", "PathDelays",pathDelays, "AveragePathGains",avgPathGains,...
-        "KFactor",K, "MaximumDopplerShift", 0.001, "ChannelFiltering",true, "ReceiveCorrelationMatrix",eye(Nr), "TransmitCorrelationMatrix",1, "SpatialCorrelationSpecification","Separate Tx Rx",...
+        "KFactor",K, "MaximumDopplerShift", 0.001, "ChannelFiltering",true, "ReceiveCorrelationMatrix",cov, "TransmitCorrelationMatrix",1, "SpatialCorrelationSpecification","Separate Tx Rx",...
         "NormalizeChannelOutputs",false);
 
         fadingOutput = mimoChan(signal.');

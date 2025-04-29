@@ -1,8 +1,8 @@
 function resized_images = transform_data_fading(signal, SNR, N, image_size, resize_method, transform, sigma,... 
-    numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas)
+    numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas, fc)
 
     
-    output = fading_strategy(signal, SNR, strategy, number_antennas, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs);
+    output = fading_strategy(signal, SNR, strategy, number_antennas, numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, fc);
     
     % Ensure signal and noisy_signal have the same length and pad if necessary
     output = output(1:min(N, length(output)));
@@ -39,6 +39,11 @@ function resized_images = transform_data_fading(signal, SNR, N, image_size, resi
         [cwd,~,~] = CWD(output, fs, sigma);
         cwd = cwd(:, 1:original_size);
         resized_images.transform_resized = imresize(cwd, [image_size, image_size], resize_method, "Antialiasing", false);
+    
+    elseif transform == "SPWVD"
+        spwvd = wvd(output,fs,"smoothedPseudo",NumFrequencyPoints=1024,NumTimePoints=1024);
+        spwvd = spwvd(:, 1:original_size);
+        resized_images.transform_resized = imresize(spwvd, [image_size, image_size], resize_method, "Antialiasing", false);
     end
 
 end
