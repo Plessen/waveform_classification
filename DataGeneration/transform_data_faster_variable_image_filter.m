@@ -30,6 +30,7 @@ function resized_images = transform_data_faster_variable_image_filter(signal, SN
         window = [padding; kaiser(256,10); padding];
         [SST_noisy,~,~] = fsst(noisy_signal, fs, window,'yaxis');
         SST_noisy = SST_noisy(N/2:N, 1:original_size);
+        SST_noisy = imgaussfilt(real(SST_noisy), 1) + 1i*imgaussfilt(imag(SST_noisy), 1);
         resized_images.transform_resized = imresize(SST_noisy, [image_size_row, image_size_col], resize_method, "Antialiasing", false);
     
     elseif transform == "CWD"
