@@ -22,7 +22,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
     end
 
     for snr_index = 1:length(SNR)
-         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
+         prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq_filter.h5']);
          h5create(prefix_clean, '/noisy_images/images_real', [image_size_col, image_size_row, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/noisy_images/images_imag', [image_size_col, image_size_row, total_signals_per_SNR], 'Datatype', 'double');
          h5create(prefix_clean, '/labels', [length(waveforms), total_signals_per_SNR]);
@@ -33,7 +33,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
         s = RandStream.create('mt19937ar','Seed', seed + snr_index);
         RandStream.setGlobalStream(s);
 
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq_filter.h5']);
         start_index = 1;
         input_batch = complex(zeros(image_size_row, image_size_col, signals_per_SNR));
         
@@ -58,7 +58,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
     
                     for idx = 1:signals_per_SNR
                         wav = type_LFM(N(idx),fs,A,fc(idx),B(idx),sweepDirections{randi(2)});
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)       
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)       
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -76,7 +76,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     for idx = 1:signals_per_SNR
                         NumHop = getCostasHopingSequence(Lc(randi(4)));
                         wav = type_Costas(N(idx), fs, A, fcmin(idx), NumHop);
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)       
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)       
                         input_batch(:, :,idx) = resized_images.transform_resized;
                     end
                     write_batch_to_h5(prefix_clean, input_batch, output_data_batch, start_index, image_size_row, image_size_col, signals_per_SNR)
@@ -98,7 +98,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                             phaseCode = [0 0 0 0 0 1 1 0 0 1 0 1 0]*pi;
                         end
                         wav = type_Barker(Ncc(randi(length(Ncc))), fs, A, fc(idx), phaseCode);
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -113,7 +113,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     M = [6, 7, 8];
                     for idx = 1:signals_per_SNR
                         wav = type_Frank(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -128,7 +128,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     M = [6, 7, 8];
                     for idx = 1:signals_per_SNR
                         wav = type_P1(Ncc(randi(3)), fs, A, fc(idx), M(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -143,7 +143,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     M = [6, 8];
                     for idx = 1:signals_per_SNR
                         wav = type_P2(Ncc(randi(3)), fs, A, fc(idx), M(randi(2)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end            
@@ -158,7 +158,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     p = [36, 49, 64];
                     for idx = 1:signals_per_SNR
                         wav = type_P3(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -173,7 +173,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     p = [36, 49, 64];
                     for idx = 1:signals_per_SNR
                         wav = type_P4(Ncc(randi(3)), fs, A, fc(idx), p(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -190,7 +190,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     for idx = 1:signals_per_SNR
                         wav = testeT1(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
                         %wav = type_T1(fs, A, fc(idx),Nps,Ng(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -208,7 +208,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     for idx = 1:signals_per_SNR
                         wav = testeT2(fs, A, fc(idx), N(idx) / fs, Nps, Ng(randi(3)));
                         %wav = type_T2(fs, A, fc(idx),Nps,Ng(randi(3)));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -226,7 +226,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     N=round(N(randperm(signals_per_SNR)));
                     for idx = 1:signals_per_SNR
                         wav = type_T3(N(idx), fs, A, fc(idx), Nps,B(idx));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)         
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -244,7 +244,7 @@ function [] = cluster_parallel_data_gen_big_SNR_variable_image_strong_freq(signa
                     N=round(N(randperm(signals_per_SNR)));
                     for idx = 1:signals_per_SNR
                         wav = type_T4(N(idx), fs, A, fc(idx), Nps,B(idx));
-                        resized_images = transform_data_faster_variable_image(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
+                        resized_images = transform_data_faster_variable_image_filter(wav, SNR(snr_index), 1024, image_size_row, image_size_col, resize_method, transform, sigma, fs)        
                         input_batch(:, :,idx) = resized_images.transform_resized;
                          
                     end
@@ -282,7 +282,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     total_signals = snr_length * signals_per_SNR * num_waveforms;
   
-    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
+    combined_clean_file = fullfile(output_dir, [prefix resize_method '_' transform '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq_filter.h5']);
 
     h5create(combined_clean_file, '/noisy_images/images_real', [image_size_col, image_size_row, total_signals], 'Datatype', 'double');
     h5create(combined_clean_file, '/noisy_images/images_imag', [image_size_col, image_size_row, total_signals], 'Datatype', 'double');
@@ -290,7 +290,7 @@ function combine_h5_files(resize_method, transform, train, snr_length, signals_p
 
     current_index = 1;
     for snr_index = 1:snr_length
-        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq.h5']);
+        prefix_clean = fullfile(output_dir, [prefix resize_method '_' transform '_' num2str(snr_index) '_' 'sigma' '_' num2str(sigma) '_big_snr_' num2str(image_size_row) '-' num2str(image_size_col) '_strong_freq_filter.h5']);
 
         for waveform_index = 1:num_waveforms
             num_signals_to_read = signals_per_SNR;
