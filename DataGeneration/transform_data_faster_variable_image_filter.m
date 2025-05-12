@@ -13,11 +13,11 @@ function resized_images = transform_data_faster_variable_image_filter(signal, SN
             g =  1/sigma*exp(-pi/sigma^2*t.^2);
             SST_noisy = fsst(noisy_signal, fs, g, 'yaxis');
             SST_noisy = SST_noisy(N/2:N, 1:original_size);
-            SST_noisy = imgaussfilt(real(SST_noisy), 1) + 1i*imgaussfilt(imag(SST_noisy), 1);
             resized_images.transform_resized = imresize(SST_noisy, [image_size_row, image_size_col], resize_method, "Antialiasing", false);
         elseif transform == "VSST"
             [~, ~, VSST_noisy, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
             VSST_noisy = VSST_noisy(1:N/2, 1:original_size);
+            VSST_noisy = imgaussfilt(real(VSST_noisy), 1) + 1i*imgaussfilt(imag(VSST_noisy), 1);
             resized_images.transform_resized = imresize(VSST_noisy, [image_size_row, image_size_col], resize_method, "Antialiasing", false);
         else
             [STFT, ~, ~, ~, ~, ~, ~] = sst2_new(noisy_signal, 1 / sigma^2 / N, N, 0);
@@ -37,6 +37,11 @@ function resized_images = transform_data_faster_variable_image_filter(signal, SN
         [cwd,~,~] = CWD(noisy_signal, fs, sigma);
         cwd = cwd(:, 1:original_size);
         resized_images.transform_resized = imresize(cwd, [image_size_row, image_size_col], resize_method, "Antialiasing", false);
+
+    elseif transform == "SPWVD"
+        spwvd = wvd(noisy_signal,fs,"smoothedPseudo",NumFrequencyPoints=1024,NumTimePoints=1024);
+        spwvd = spwvd(:, 1:original_size);
+        resized_images.transform_resized = imresize(spwvd, [image_size, image_size], resize_method, "Antialiasing", false);
     end
 
 end
