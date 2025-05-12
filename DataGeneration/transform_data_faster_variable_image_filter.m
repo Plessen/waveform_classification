@@ -41,7 +41,7 @@ function resized_images = transform_data_faster_variable_image_filter(signal, SN
     elseif transform == "SPWVD"
         spwvd = wvd(noisy_signal,fs,"smoothedPseudo",NumFrequencyPoints=1024,NumTimePoints=1024);
         spwvd = spwvd(:, 1:original_size);
-        resized_images.transform_resized = imresize(spwvd, [image_size, image_size], resize_method, "Antialiasing", false);
+        resized_images.transform_resized = imresize(spwvd, [image_size_row, image_size_col], resize_method, "Antialiasing", false);
     end
 
 end
