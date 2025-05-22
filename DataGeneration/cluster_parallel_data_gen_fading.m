@@ -81,10 +81,11 @@ function [] = cluster_parallel_data_gen_fading(signals_per_SNR, resize_method, t
                     N = linspace(512,1024,signals_per_SNR);
                     N=round(N(randperm(signals_per_SNR)));
                     for idx = 1:signals_per_SNR
-                        NumHop = getCostasHopingSequence(Lc(randi(4)));
+                        hop = Lc(randi(4));
+                        NumHop = getCostasHopingSequence(hop);
                         wav = type_Costas(N(idx), fs, A, fcmin(idx), NumHop);
                         resized_images = transform_data_fading(wav, SNR(snr_index), 1024, image_size, resize_method, transform, sigma,... 
-                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas, fcmin(idx));          
+                            numPaths_range, pathDelay_range, pathGain_range, Kfactor_range, fs, strategy, number_antennas, fcmin(idx) * hop);          
                         input_batch(:, :,idx) = resized_images.transform_resized;
                     end
                     write_batch_to_h5(prefix_clean, input_batch, output_data_batch, start_index, image_size, signals_per_SNR)
