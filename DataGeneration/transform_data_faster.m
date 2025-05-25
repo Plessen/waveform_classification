@@ -42,6 +42,11 @@ function resized_images = transform_data_faster(signal, SNR, N, image_size, resi
         spwvd = wvd(noisy_signal,fs,"smoothedPseudo",NumFrequencyPoints=1024,NumTimePoints=1024);
         spwvd = spwvd(:, 1:original_size);
         resized_images.transform_resized = imresize(spwvd, [image_size, image_size], resize_method, "Antialiasing", false);
+
+    elseif transform == "WVD"
+        WVD = wvd(noisy_signal,fs);
+        WVD = WVD(:, 1:original_size);
+        resized_images.transform_resized = imresize(WVD, [image_size, image_size], resize_method, "Antialiasing", false);
     end
 
 end
