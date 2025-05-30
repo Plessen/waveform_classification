@@ -13,8 +13,8 @@ function plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, 
     ax.FontSize = 14; 
     xlabel("SNR", "FontSize", 22);
     ylabel("Accuracy","FontSize", 22);
-    markers = {'o', 's', 'd', '^', 'v', '<', '>', 'p', '*', 'h', 'H', '+'};
-    linestyles = {'-', '--', '-.', ':', '-', '--', '-.', ':', '-', '--', '-.', ':'};
+    markers = {'o', 's', 'd', '^', 'v', '<', '>', 'p', '*','h', 'H', '+', 'x', '.', '|', '_','none'};
+    linestyles = {'-', '--', '-.', ':', '-', '--', '-.', ':', '-', '--', '-.', ':', '--'};
     for i = 1:length(df_list)
         df = df_list{i};
         test_acc = df.test_acc_step;
@@ -48,10 +48,12 @@ end
 
 % Define the function to plot accuracy for each waveform
 function plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)
-    markers = {'o', 's', 'd', '^', 'v', '<', '>', 'p', '*', 'h', 'H', '+'};
-    linestyles = {'-', '--', '-.', ':', '-', '--', '-.', ':', '-', '--', '-.', ':'};
+    markers = {'o', 's', 'd', '^', 'v', '<', '>', 'p', '*','h', 'H', '+', 'x', '.', '|', '_','none'};
+    linestyles = {'-', '--', '-.', ':','-o', '--s', '-.^', ':d','--v', '-<', '->', '-*',':p', '--h', '-+','-.x'};
+
     figure('Position', [10 10 1900 400]);
-    waveforms = [1,9,10,11,12, 5,8];
+    %waveforms = [1,9,10,11,12, 5,8];
+    waveforms = [2,3,4];
     tiledlayout(1, length(waveforms),'TileSpacing','tight','Padding','tight');
     for jj = 1:length(waveforms)
         i = waveforms(jj);
@@ -117,38 +119,54 @@ function plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list)
 end
 
 % Main script
-df = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.03-all-waveforms-correct-costas', 'version_0');
-df1 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
-df2 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.05-all-waveforms-correct-costas', 'version_0');
-df3 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.06-all-waveforms-correct-costas', 'version_0');
-df4 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.07-all-waveforms-correct-costas', 'version_0');
-df5 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.08-all-waveforms-correct-costas', 'version_0');
-df6 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-kaiser-sigma-10-all-waveforms-correct-costas', 'version_0');
-df7 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-CWD-sigma-1-all-waveforms-correct-costas', 'version_0');
-df8 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-STFT-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+df = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.03-all-waveforms-correct-costas-big-snr', 'version_0');
+df1 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.04-all-waveforms-correct-costas-big-snr', 'version_0');
+df2 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.05-all-waveforms-correct-costas-big-snr', 'version_0');
+df3 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.06-all-waveforms-correct-costas-big-snr', 'version_0');
+df4 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.07-all-waveforms-correct-costas-big-snr', 'version_0');
+df5 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.08-all-waveforms-correct-costas-big-snr', 'version_0');
+df6 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-kaiser-sigma-10-all-waveforms-correct-costas-big-snr', 'version_0');
+df7 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-CWD-sigma-1-all-waveforms-correct-costas-big-snr', 'version_0');
+%df8 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-STFT-sigma-0.05-all-waveforms-correct-costas-big-snr-resize', 'version_0');
+df9 = get_dataframe('logs_cluster_v4', 'realcnn-attention-bilinear-SST-sigma-0.05-all-waveforms-correct-costas-big-snr-128-128-filter', 'version_0');
+df10 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-CWD-sigma-0.05-all-waveforms-correct-costas-big-snr', 'version_0');
+df11 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-CWD-sigma-0.01-all-waveforms-correct-costas-big-snr', 'version_0');
+df12 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-WVD-sigma-1-all-waveforms-correct-costas-big-snr', 'version_0');
+df13 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SPWVD-sigma-20-all-waveforms-correct-costas-big-snr', 'version_0');
 
-
-%df3 = get_dataframe('logs_cluster', 'realcnn-attention-nearest-CWD-sigma-1-all-waveforms', 'version_0');
-df_list = {df, df1, df2, df3, df4, df5}; %, df6, df7, df8};
+df_list = {df, df1, df2, df3, df4, df5, df6, df7, df9, df10,  df11, df12, df13};
 number_waveforms = 12;
-SNR = -14:2:-4;
+SNR = -14:2:20;
 waveform_list = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
-label_list = {'\sigma_g = 0.03','\sigma_g = 0.04', '\sigma_g = 0.05', '\sigma_g = 0.06', '\sigma_g = 0.07', '\sigma_g = 0.08', 'kaiser in [6]', 'CWD', 'STFT \sigma_g = 0.04'};
+label_list = {'\sigma_g = 0.03','\sigma_g = 0.04', '\sigma_g = 0.05', '\sigma_g = 0.06', '\sigma_g = 0.07', '\sigma_g = 0.08', 'Kaiser','CWD \sigma = 1', '\sigma_g = 0.05  - filter', 'CWD \sigma = 0.05', 'CWD \sigma = 0.01', 'WVD', 'SPWVD'};
 
 plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, [0.78 0.84], 0.78:0.01:0.84);
-plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list);
+%plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list);
 
-df7 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
-df8 = get_dataframe('logs_cluster_v3', 'realcnn-attention-bilinear-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
-df9 = get_dataframe('logs_cluster_v3', 'realcnn-attention-bicubic-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
-df10 = get_dataframe('logs_cluster_v3', 'realcnn-attention-lanczos2-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
-df11 = get_dataframe('logs_cluster_v3', 'realcnn-attention-lanczos3-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
 
-df_list = {df7, df8, df9, df10, df11};
+df = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SST-sigma-0.05-all-waveforms-correct-costas-big-snr-128-128-strong-freq', 'version_0');
+df1 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-VSST-sigma-0.05-all-waveforms-correct-costas-big-snr-128-128-strong-freq', 'version_0');
+df2 = get_dataframe('logs_cluster_v4', 'realcnn-attention-nearest-SPWVD-sigma-20-all-waveforms-correct-costas-big-snr-128-128-strong-freq-filter', 'version_0');
+
+df_list = {df, df1, df2};
 number_waveforms = 12;
-SNR = -14:2:-4;
+SNR = -14:2:10;
 waveform_list = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
-label_list = {'nearest', 'bilinear', 'bicubic', 'lanczos2', 'lanczos3'};
+label_list = {'SST','VSST', 'SPWVD'};
 
-plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, [0.93 0.94], 0.93:0.001:0.94);
-plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list);
+plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, [0.78 0.84], 0.78:0.01:0.84);
+
+%df7 = get_dataframe('logs_cluster_v3', 'realcnn-attention-nearest-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+%df8 = get_dataframe('logs_cluster_v3', 'realcnn-attention-bilinear-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+%df9 = get_dataframe('logs_cluster_v3', 'realcnn-attention-bicubic-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+%df10 = get_dataframe('logs_cluster_v3', 'realcnn-attention-lanczos2-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+%df11 = get_dataframe('logs_cluster_v3', 'realcnn-attention-lanczos3-SST-sigma-0.04-all-waveforms-correct-costas', 'version_0');
+
+%df_list = {df7, df8, df9, df10, df11};
+%number_waveforms = 12;
+%SNR = -14:2:20;
+%waveform_list = {'LFM', 'Costas', 'Barker', 'Frank', 'P1', 'P2', 'P3', 'P4', 'T1', 'T2', 'T3', 'T4'};
+%label_list = {'nearest', 'bilinear', 'bicubic', 'lanczos2', 'lanczos3'};
+
+%plot_overall_test_accuracy(df_list, number_waveforms, SNR, label_list, [0.93 0.94], 0.93:0.001:0.94);
+%plot_all_acc(df_list, number_waveforms, SNR, waveform_list, label_list);
