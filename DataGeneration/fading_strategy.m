@@ -49,7 +49,7 @@ function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_rang
         if strategy == "independent"
             cov = eye(Nr);
         else
-            cov = channel_correlation_matrix(Nr, fc, 3e8 / (fs / 3) / 2); %%Lambda is the smallest lambda of considered carriers / 2
+            cov = channel_correlation_matrix(Nr, fc, 0.00001); % All antennas are fully correlated and equal to each other
         end
         mimoChan = comm.MIMOChannel("SampleRate",fs,"FadingDistribution","Rician", "PathDelays",pathDelays, "AveragePathGains",avgPathGains,...
         "KFactor",K, "MaximumDopplerShift", 0.001, "ChannelFiltering",true, "ReceiveCorrelationMatrix",cov, "TransmitCorrelationMatrix",1, "SpatialCorrelationSpecification","Separate Tx Rx",...
