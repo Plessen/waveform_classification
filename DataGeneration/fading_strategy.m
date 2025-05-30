@@ -86,5 +86,24 @@ function noisy_signal = fading_strategy(signal, SNR, strategy, Nr, numPaths_rang
         
         [~, index] = max(sum(abs(received_signal).^2, 1));
         noisy_signal = received_signal(:, index);
+     
+    elseif strategy == "maximum"
+        PathNum = randi(numPaths_range,1,1);
+        pathDelayConstant = randi(pathDelay_range,1,1);
+        avgPathGainsConstant = randi(pathGain_range,1,1);
+        
+        pathDelays = [0:PathNum-1].*pathDelayConstant*1e-9;
+        avgPathGains = -1*[0:PathNum-1].*avgPathGainsConstant;
+        K = randi(Kfactor_range,1,1);
+
+        mimoChan = comm.MIMOChannel("SampleRate",fs,"FadingDistribution","Rician", "PathDelays",pathDelays, "AveragePathGains",avgPathGains,...
+        "KFactor",K, "MaximumDopplerShift", 0.001, "ChannelFiltering",true, "ReceiveCorrelationMatrix",eye(Nr), "TransmitCorrelationMatrix",1, "SpatialCorrelationSpecification","Separate Tx Rx",...
+        "NormalizeChannelOutputs",false);
+
+        fadingOutput = mimoChan(signal.');
+        
+        H = step(mimoChan, 1);
+        received_signal = awgn(fadingOutput, SNR, "measured");
+        noisy_signal = sum(conj(H) .* received_signal, 2);
     end
 end
