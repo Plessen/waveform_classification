@@ -68,7 +68,7 @@ function noisy_signal = fading_strategy_flat(signal, SNR, strategy, Nr, numPaths
         received_signal = signal .* h;
         received_signal = awgn(received_signal, SNR, 'measured');
 
-        noisy_signal = sum(conj(H) .* received_signal, 2);
+        noisy_signal = sum(conj(h) .* received_signal, 2);
 
     end
 end
